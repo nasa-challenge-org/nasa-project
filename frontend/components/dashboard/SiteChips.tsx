@@ -13,10 +13,7 @@ export function SiteChips({
 }) {
   if (!sites.length) {
     return (
-      <p className="text-xs text-slate-500">
-        Candidate sites load from the catalogue. Empty list is unknown, not
-        zero sites.
-      </p>
+      <p className="text-xs text-slate-500">Catalogue loading…</p>
     );
   }
 

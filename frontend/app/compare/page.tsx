@@ -4,8 +4,9 @@ import { FormEvent, useEffect, useState } from "react";
 import { CompareTable } from "@/components/compare/CompareTable";
 import { SiteSelect } from "@/components/dashboard/SiteSelect";
 import { DemoBanner } from "@/components/shared/DemoBanner";
+import { EmptyPanel } from "@/components/shared/EmptyPanel";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
-import { StatusBanner } from "@/components/shared/StatusBanner";
+import { PageIntro } from "@/components/shared/PageIntro";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChipSkeletonRow, CompareTableSkeleton } from "@/components/ui/skeleton";
@@ -76,14 +77,14 @@ export default function ComparePage() {
     setError(null);
     try {
       const scenarios = [
-        scenarioPayload(siteA, "Scenario A", startUtc, durationHours, stepMinutes, includeTerrain),
-        scenarioPayload(siteB, "Scenario B", startUtc, durationHours, stepMinutes, includeTerrain),
+        scenarioPayload(siteA, "A", startUtc, durationHours, stepMinutes, includeTerrain),
+        scenarioPayload(siteB, "B", startUtc, durationHours, stepMinutes, includeTerrain),
       ];
       if (includeC) {
         scenarios.push(
           scenarioPayload(
             siteC,
-            "Scenario C",
+            "C",
             startUtc,
             durationHours,
             stepMinutes,
@@ -117,17 +118,23 @@ export default function ComparePage() {
 
   return (
     <div className="space-y-4">
-      <p className="max-w-3xl text-sm text-slate-400">
-        Same UTC window on two or three candidates. Missing values stay N/A.
-        This does not rank landing safety.
-      </p>
+      <PageIntro
+        steps={[
+          { n: "1", label: "Two sites" },
+          { n: "2", label: "Same UTC" },
+          { n: "3", label: "Compare" },
+        ]}
+      />
       {error ? <ErrorBanner title="Compare" message={error} /> : null}
       <DemoBanner show={Boolean(demo)} />
       {sites === null && !error ? <ChipSkeletonRow /> : null}
 
-      <Card>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <div className="grid gap-3 md:grid-cols-2">
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <div className="grid items-stretch gap-3 lg:grid-cols-[1fr_auto_1fr]">
+          <Card className="border-amber-400/20">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-amber-300">
+              Site A
+            </p>
             <SiteSelect
               id="compare-a"
               sites={sites ?? []}
@@ -135,6 +142,16 @@ export default function ComparePage() {
               onChange={setSiteA}
               disabled={loading || sites === null}
             />
+          </Card>
+          <div className="hidden items-center justify-center lg:flex">
+            <span className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-slate-300">
+              VS
+            </span>
+          </div>
+          <Card className="border-sky-400/20">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sky-300">
+              Site B
+            </p>
             <SiteSelect
               id="compare-b"
               sites={sites ?? []}
@@ -142,30 +159,43 @@ export default function ComparePage() {
               onChange={setSiteB}
               disabled={loading || sites === null}
             />
-          </div>
-          <div className="flex items-start gap-2">
-            <input
-              id="include-c"
-              type="checkbox"
-              className="mt-1"
-              checked={includeC}
-              onChange={(event) => setIncludeC(event.target.checked)}
-            />
-            <label htmlFor="include-c" className="text-sm">
-              Add a third scenario
+          </Card>
+        </div>
+
+        <Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                id="include-c"
+                type="checkbox"
+                checked={includeC}
+                onChange={(event) => setIncludeC(event.target.checked)}
+              />
+              Add site C
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-400">
+              <input
+                id="compare-terrain"
+                type="checkbox"
+                checked={includeTerrain}
+                onChange={(event) => setIncludeTerrain(event.target.checked)}
+              />
+              Terrain (if verified)
             </label>
           </div>
           {includeC ? (
-            <SiteSelect
-              id="compare-c"
-              sites={sites ?? []}
-              value={siteC}
-              onChange={setSiteC}
-              disabled={loading || sites === null}
-            />
+            <div className="mt-3">
+              <SiteSelect
+                id="compare-c"
+                sites={sites ?? []}
+                value={siteC}
+                onChange={setSiteC}
+                disabled={loading || sites === null}
+              />
+            </div>
           ) : null}
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="sm:col-span-2">
               <FieldLabel htmlFor="compare-start">Start (UTC)</FieldLabel>
               <TextInput
                 id="compare-start"
@@ -176,7 +206,7 @@ export default function ComparePage() {
               />
             </div>
             <div>
-              <FieldLabel htmlFor="compare-duration">Duration (hours)</FieldLabel>
+              <FieldLabel htmlFor="compare-duration">Hours</FieldLabel>
               <TextInput
                 id="compare-duration"
                 type="number"
@@ -189,7 +219,7 @@ export default function ComparePage() {
               />
             </div>
             <div>
-              <FieldLabel htmlFor="compare-step">Step (minutes)</FieldLabel>
+              <FieldLabel htmlFor="compare-step">Step</FieldLabel>
               <SelectInput
                 id="compare-step"
                 value={stepMinutes}
@@ -197,54 +227,46 @@ export default function ComparePage() {
               >
                 {[5, 10, 15, 30, 60].map((step) => (
                   <option key={step} value={step}>
-                    {step}
+                    {step} min
                   </option>
                 ))}
               </SelectInput>
             </div>
           </div>
-          <div className="flex items-start gap-2">
-            <input
-              id="compare-terrain"
-              type="checkbox"
-              className="mt-1"
-              checked={includeTerrain}
-              onChange={(event) => setIncludeTerrain(event.target.checked)}
-            />
-            <label htmlFor="compare-terrain" className="text-sm text-slate-300">
-              Request terrain-aware analysis (unavailable until verified)
-            </label>
-          </div>
           {duplicate ? (
-            <p className="text-sm text-rose-300" role="alert">
-              Scenarios must use different sites.
+            <p className="mt-3 text-sm text-rose-300" role="alert">
+              Sites must be different.
             </p>
           ) : null}
-          <Button type="submit" disabled={loading || duplicate || sites === null}>
+          <Button
+            className="mt-4"
+            type="submit"
+            disabled={loading || duplicate || sites === null}
+          >
             {loading ? "Comparing…" : "Compare"}
           </Button>
-        </form>
-      </Card>
+        </Card>
+      </form>
 
       {loading ? <CompareTableSkeleton /> : null}
       {result && !loading ? (
         <Card className="space-y-3">
           <p className="text-xs text-slate-500">
-            Status {result.status}. Quality labels are per column. Missing
-            aligned values are N/A.
+            Status {result.status} · blanks are N/A
           </p>
           <CompareTable result={result} />
-          <ul className="list-disc pl-5 text-xs text-slate-500">
-            {result.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
+          {result.warnings.length ? (
+            <ul className="list-disc pl-5 text-xs text-slate-500">
+              {result.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          ) : null}
         </Card>
       ) : !loading ? (
-        <StatusBanner
-          tone="empty"
+        <EmptyPanel
           title="No comparison yet"
-          message="Pick two or three sites and the same UTC window."
+          hint="Pick A and B, same UTC, then Compare."
         />
       ) : null}
     </div>

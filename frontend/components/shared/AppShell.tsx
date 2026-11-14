@@ -2,22 +2,30 @@
 
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { HealthBadge } from "@/components/shared/HealthBadge";
 import { SidebarMeta } from "@/components/shared/SidebarMeta";
 import { SidebarNav } from "@/components/shared/SidebarNav";
 
-function pageTitle(pathname: string): string {
-  if (pathname.startsWith("/sites/")) return "Site brief";
-  if (pathname === "/sites") return "Candidates";
-  if (pathname === "/dashboard") return "Mission";
-  if (pathname === "/compare") return "Compare";
-  if (pathname === "/methodology") return "Sources";
-  return "LunarEdge";
+const PAGES: Record<string, { title: string; hint: string }> = {
+  "/": { title: "Home", hint: "Four screens. One south-pole clock." },
+  "/sites": { title: "Candidates", hint: "Pick a GSFC site" },
+  "/dashboard": { title: "Mission", hint: "Sun and Earth for one window" },
+  "/compare": { title: "Compare", hint: "Same clock · two sites" },
+  "/methodology": { title: "Sources", hint: "What we use · what we don’t" },
+};
+
+function pageMeta(pathname: string): { title: string; hint: string } {
+  if (pathname.startsWith("/sites/") && pathname !== "/sites") {
+    return { title: "Site brief", hint: "Catalogue facts only" };
+  }
+  return PAGES[pathname] ?? { title: "LunarEdge", hint: "South pole navigator" };
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const title = pageTitle(pathname);
+  const { title, hint } = pageMeta(pathname);
 
   return (
     <div className="flex h-full min-h-0 flex-col p-2 sm:p-3 lg:p-5">
@@ -35,9 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-[11px] uppercase tracking-[0.28em] text-cyan-400">
                 LunarEdge
               </p>
-              <p className="truncate text-sm text-slate-300">
-                South pole navigator
-              </p>
+              <p className="truncate text-sm text-slate-300">South pole</p>
             </div>
             <button
               type="button"
@@ -62,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ) : null}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="flex items-center gap-3 border-b border-white/8 px-3 py-3 sm:px-6">
+          <header className="flex items-center justify-between gap-3 border-b border-white/8 px-3 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -76,10 +82,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <h1 className="truncate text-lg font-semibold sm:text-xl">
                   {title}
                 </h1>
-                <p className="hidden text-xs text-slate-500 sm:block">
-                  UTC · N/A means unknown · not a landing-safety tool
+                <p className="hidden truncate text-xs text-slate-500 sm:block">
+                  {hint}
                 </p>
               </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] text-slate-400 sm:inline">
+                UTC · N/A ≠ 0
+              </span>
+              <OnboardingTour />
+              <HealthBadge />
             </div>
           </header>
           <main className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6">

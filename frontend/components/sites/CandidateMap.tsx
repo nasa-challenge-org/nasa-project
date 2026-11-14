@@ -85,19 +85,26 @@ export function CandidateMap({
 
   return (
     <div className="flex h-full flex-col rounded-3xl border border-white/8 bg-[#0c1424] p-4 sm:p-5">
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-300/80">
-          South pole sketch
-        </p>
-        <p className="mt-1 text-sm font-medium text-slate-100">
-          Looking down on 90°S
-        </p>
-        <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
-          Centre is the geographic south pole. Up on the page is 0° east
-          longitude. Rings are kilometres from the pole on a sphere of radius
-          1,737.4 km — not LOLA topography. Unverified sites are omitted, not
-          drawn at 0°.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-300/80">
+            South pole
+          </p>
+          <p className="mt-0.5 text-sm font-medium text-slate-100">
+            Looking down on 90°S
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-[10px] text-slate-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2 py-1">
+            <span className="h-2 w-2 rounded-full bg-white" /> pole
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2 py-1">
+            <span className="h-2 w-2 rounded-full border border-dashed border-slate-400" /> km
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2 py-1">
+            0°E ↑
+          </span>
+        </div>
       </div>
 
       <div className="mt-3 grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)]">
@@ -261,16 +268,6 @@ export function CandidateMap({
         </svg>
 
         <div className="flex flex-col gap-3">
-          <div className="rounded-2xl bg-white/5 px-3 py-3 text-[11px] leading-relaxed text-slate-400">
-            <p className="font-medium text-slate-200">How to read this sketch</p>
-            <ul className="mt-2 space-y-1.5">
-              <li>White dot = lunar south pole (90°S).</li>
-              <li>Dashed rings = distance from the pole in kilometres.</li>
-              <li>Spokes = east longitude. 0°E is toward the top of the page.</li>
-              <li>Numbered discs = GSFC candidate observers with verified coordinates.</li>
-            </ul>
-          </div>
-
           {active ? (
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 px-3 py-3">
               <p className="text-[11px] uppercase tracking-wide text-cyan-300/80">

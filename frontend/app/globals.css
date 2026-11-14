@@ -26,3 +26,7 @@ body {
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(0.8);
 }
+
+a, button {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}

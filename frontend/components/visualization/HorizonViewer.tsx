@@ -132,9 +132,7 @@ export function HorizonViewer({
             Local sky
           </p>
           <p className="text-xs text-slate-500">
-            {viewMode === "2d"
-              ? "Polar zenith plot · azimuth clockwise from north (Horizons qty 4)"
-              : "3D celestial hemisphere · topocentric lunar horizon"}
+            {viewMode === "2d" ? "N up · horizon = blue ring" : "3D sky bowl"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -281,27 +279,34 @@ export function HorizonViewer({
             visible={sample?.earth.geometric_visible ?? null}
           />
         </svg>
-        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-          <li>
-            Sun{" "}
-            {sample?.sun.elevation_deg == null
-              ? "N/A"
-              : `${sample.sun.elevation_deg}° el · ${sample.sun.azimuth_deg}° az`}
-          </li>
-          <li>
-            Earth{" "}
-            {sample?.earth.elevation_deg == null
-              ? "N/A"
-              : `${sample.earth.elevation_deg}° el · ${sample.earth.azimuth_deg}° az`}
-          </li>
-          <li>
-            Terrain vis{" "}
-            {sample?.sun.terrain_visible == null
-              ? "N/A"
-              : String(sample.sun.terrain_visible)}
-          </li>
-          <li>Track = samples up to the timeline cursor</li>
-        </ul>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+          <div className="rounded-2xl bg-amber-400/10 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-amber-300">Sun</p>
+            <p className="mt-0.5 font-medium text-slate-100">
+              {sample?.sun.elevation_deg == null
+                ? "N/A"
+                : `${sample.sun.elevation_deg.toFixed(1)}° el`}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-sky-400/10 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-sky-300">Earth</p>
+            <p className="mt-0.5 font-medium text-slate-100">
+              {sample?.earth.elevation_deg == null
+                ? "N/A"
+                : `${sample.earth.elevation_deg.toFixed(1)}° el`}
+            </p>
+          </div>
+          <div className="col-span-2 rounded-2xl bg-white/5 px-3 py-2 sm:col-span-1">
+            <p className="text-[10px] uppercase tracking-wide text-slate-500">
+              Terrain
+            </p>
+            <p className="mt-0.5 font-medium text-slate-100">
+              {sample?.sun.terrain_visible == null
+                ? "N/A"
+                : String(sample.sun.terrain_visible)}
+            </p>
+          </div>
+        </div>
       </div>
       <div className="relative m-3 flex items-center justify-between rounded-2xl bg-black/45 px-3 py-2 text-xs">
         <span className="truncate text-slate-200">

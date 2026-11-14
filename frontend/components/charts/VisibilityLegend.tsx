@@ -19,7 +19,7 @@ export function VisibilityLegend() {
       </li>
       <li className="flex items-center gap-1.5">
         <span className="inline-block h-2.5 w-2.5 rounded-sm border border-dashed border-slate-500" />
-        Unknown (null ≠ blocked)
+        Unknown
       </li>
     </ul>
   );

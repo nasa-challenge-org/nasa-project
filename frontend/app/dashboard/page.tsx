@@ -8,7 +8,8 @@ import { VisibilityLegend } from "@/components/charts/VisibilityLegend";
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { MetricStatCard } from "@/components/dashboard/MetricStatCard";
 import { SiteChips } from "@/components/dashboard/SiteChips";
-import { SiteRoster } from "@/components/dashboard/SiteRoster";
+import { PageIntro } from "@/components/shared/PageIntro";
+import { EmptyPanel } from "@/components/shared/EmptyPanel";
 import { OperationalWindows } from "@/components/dashboard/OperationalWindows";
 import { TimelineSlider } from "@/components/dashboard/TimelineSlider";
 import { DemoBanner } from "@/components/shared/DemoBanner";
@@ -19,7 +20,6 @@ import {
   MetricGridSkeleton,
   MissionPageSkeleton,
   PolarPanelSkeleton,
-  RosterSkeleton,
   TimelineSkeleton,
   ChartSkeleton,
 } from "@/components/ui/skeleton";
@@ -57,9 +57,6 @@ function DashboardScreen() {
     setQuerySite(requestedSite);
     if (requestedSite) {
       setSiteId(requestedSite);
-      setResult(null);
-      setSampleIndex(0);
-      setError(null);
     }
   }
 
@@ -77,12 +74,6 @@ function DashboardScreen() {
       .catch((err: Error) => setSitesError(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function invalidateResult() {
-    setResult(null);
-    setSampleIndex(0);
-    setError(null);
-  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -149,11 +140,41 @@ function DashboardScreen() {
   const catalogue = sites ?? [];
   const sitesLoading = sites === null && !sitesError;
   const selectedName = catalogue.find((site) => site.id === siteId)?.name ?? siteId;
+  const chartsStale = Boolean(
+    result &&
+      (result.site.id !== siteId ||
+        result.time.step_minutes !== stepMinutes ||
+        (() => {
+          try {
+            const wanted = utcIsoFromDatetimeLocal(startUtc).slice(0, 16);
+            const got = result.time.start_utc.replace(/Z$/i, "").slice(0, 16);
+            return wanted !== got;
+          } catch {
+            return true;
+          }
+        })() ||
+        (() => {
+          const ms =
+            Date.parse(result.time.end_utc) - Date.parse(result.time.start_utc);
+          if (!Number.isFinite(ms)) return false;
+          return Math.round(ms / 3_600_000) !== durationHours;
+        })()),
+  );
+  const horizonSiteName = result
+    ? (result.site.name ?? selectedName)
+    : selectedName;
   const sunSeries = samples.map((item) => item.sun.elevation_deg);
   const earthSeries = samples.map((item) => item.earth.elevation_deg);
 
   return (
     <div className="space-y-4">
+      <PageIntro
+        steps={[
+          { n: "1", label: "Site" },
+          { n: "2", label: "UTC window" },
+          { n: "3", label: "Run" },
+        ]}
+      />
       {sitesError ? (
         <ErrorBanner title="Could not load sites" message={sitesError} />
       ) : null}
@@ -161,17 +182,13 @@ function DashboardScreen() {
       {error ? (
         <ErrorBanner title="Analysis" message={error} />
       ) : null}
-
       {sitesLoading ? (
         <ChipSkeletonRow />
       ) : (
         <SiteChips
           sites={catalogue}
           selectedId={siteId}
-          onSelect={(id) => {
-            setSiteId(id);
-            invalidateResult();
-          }}
+          onSelect={(id) => setSiteId(id)}
         />
       )}
 
@@ -184,7 +201,7 @@ function DashboardScreen() {
             sample={sample}
             samples={samples}
             selectedIndex={sampleIndex}
-            siteName={selectedName}
+            siteName={horizonSiteName}
             qualityLabel={
               result
                 ? `${result.quality.ephemeris} / ${result.quality.terrain}`
@@ -198,21 +215,15 @@ function DashboardScreen() {
           <CandidateMap
             sites={catalogue}
             selectedId={siteId}
-            onSelect={(id) => {
-              setSiteId(id);
-              invalidateResult();
-            }}
+            onSelect={(id) => setSiteId(id)}
           />
         ) : (
-          <div className="rounded-3xl border border-white/8 bg-[#121a2e]/90 p-4 text-sm text-slate-500">
-            South pole map waits for the site catalogue. Empty is unknown, not
-            zero sites.
-          </div>
+          <EmptyPanel title="Map waiting on catalogue" hint="Empty is unknown, not zero sites." />
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
-        <Card className="lg:col-span-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Card className="lg:col-span-12">
           <ControlPanel
             sites={catalogue}
             siteId={siteId}
@@ -225,58 +236,19 @@ function DashboardScreen() {
             customLon={customLon}
             customAlt={customAlt}
             loading={loading}
-            onSiteId={(value) => {
-              setSiteId(value);
-              invalidateResult();
-            }}
-            onStartUtc={(value) => {
-              setStartUtc(value);
-              invalidateResult();
-            }}
-            onDurationHours={(value) => {
-              setDurationHours(value);
-              invalidateResult();
-            }}
-            onStepMinutes={(value) => {
-              setStepMinutes(value);
-              invalidateResult();
-            }}
-            onIncludeTerrain={(value) => {
-              setIncludeTerrain(value);
-              invalidateResult();
-            }}
-            onCustomObserver={(value) => {
-              setCustomObserver(value);
-              invalidateResult();
-            }}
-            onCustomLat={(value) => {
-              setCustomLat(value);
-              invalidateResult();
-            }}
-            onCustomLon={(value) => {
-              setCustomLon(value);
-              invalidateResult();
-            }}
-            onCustomAlt={(value) => {
-              setCustomAlt(value);
-              invalidateResult();
-            }}
+            onSiteId={setSiteId}
+            onStartUtc={setStartUtc}
+            onDurationHours={setDurationHours}
+            onStepMinutes={setStepMinutes}
+            onIncludeTerrain={setIncludeTerrain}
+            onCustomObserver={setCustomObserver}
+            onCustomLat={setCustomLat}
+            onCustomLon={setCustomLon}
+            onCustomAlt={setCustomAlt}
+            chartsStale={chartsStale}
+            lastRunSiteName={result?.site.name}
             onSubmit={onSubmit}
           />
-        </Card>
-        <Card className="min-h-[240px] lg:col-span-6">
-          {sitesLoading ? (
-            <RosterSkeleton />
-          ) : (
-            <SiteRoster
-              sites={catalogue}
-              selectedId={siteId}
-              onSelect={(id) => {
-                setSiteId(id);
-                invalidateResult();
-              }}
-            />
-          )}
         </Card>
       </div>
 

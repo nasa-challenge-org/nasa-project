@@ -31,20 +31,20 @@ export function SidebarMeta() {
   return (
     <div className="mt-4 rounded-2xl border border-white/8 bg-[#0c1324] p-3">
       <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-        South pole
+        Catalogue
       </p>
-      <div className="mt-1 text-sm text-slate-200">
+      <div className="mt-2 flex items-baseline gap-2 text-slate-200">
         {!loaded ? (
-          <Skeleton className="mt-1 h-4 w-36" />
-        ) : sitesCount === null ? (
-          "Candidate count N/A"
+          <Skeleton className="h-7 w-16" />
         ) : (
-          `${sitesCount} GSFC LOLA sites`
+          <>
+            <span className="text-2xl font-semibold tabular-nums">
+              {sitesCount ?? "N/A"}
+            </span>
+            <span className="text-xs text-slate-500">GSFC sites</span>
+          </>
         )}
       </div>
-      <p className="text-[11px] text-slate-500">
-        Navigator only · not a landing ranking
-      </p>
     </div>
   );
 }

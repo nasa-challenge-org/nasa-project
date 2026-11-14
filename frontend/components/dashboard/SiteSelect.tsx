@@ -33,19 +33,13 @@ export function SiteSelect({
           </option>
         ))}
       </SelectInput>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 font-mono text-[11px] text-slate-500">
         {coordinateLabel(
           selected?.latitude_deg ?? null,
           selected?.longitude_east_deg ?? null,
-        )}{" "}
-        · verification: {selected?.verification_status ?? "unknown"}
+        )}
         {selected?.gsfc_site_id ? ` · ${selected.gsfc_site_id}` : ""}
       </p>
-      {selected && selected.verification_status !== "verified" ? (
-        <p className="mt-1 inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
-          ⚠️ Coordinates unverified in GSFC catalogue
-        </p>
-      ) : null}
     </div>
   );
 }

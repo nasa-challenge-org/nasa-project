@@ -33,17 +33,10 @@ export function ElevationChart({
 
   return (
     <Card className="h-full">
-      <p className="text-sm font-medium text-slate-200">
-        Elevation vs UTC
-      </p>
-      <p className="mt-1 text-xs text-slate-500">
-        Gaps are null samples. Null is a break, never 0°.
-      </p>
+      <p className="text-sm font-medium text-slate-200">Elevation vs UTC</p>
+      <p className="mt-1 text-xs text-slate-500">Gaps = N/A, never 0°</p>
       {!hasNumeric ? (
-        <p className="mt-6 text-sm text-slate-500">
-          No numeric elevation samples yet. Values remain N/A until Horizons
-          returns series.
-        </p>
+        <p className="mt-6 text-sm text-slate-500">Run analysis to plot.</p>
       ) : (
         <div className="mt-4 h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
