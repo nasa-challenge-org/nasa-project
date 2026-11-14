@@ -36,6 +36,8 @@ export function MissionForm({
   onSubmit: (event: FormEvent) => void;
 }) {
   const durationInvalid = durationHours < 1 || durationHours > 336;
+  const selected = sites.find((site) => site.id === siteId);
+  const unverified = selected && selected.verification_status !== "verified";
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
@@ -112,7 +114,12 @@ export function MissionForm({
           Duration must be between 1 and 336 hours.
         </p>
       ) : null}
-      <Button type="submit" disabled={loading || durationInvalid || !siteId}>
+      {unverified ? (
+        <p className="text-xs text-amber-300" role="alert">
+          Site coordinates are unverified in the GSFC catalogue. Select a verified site to run analysis.
+        </p>
+      ) : null}
+      <Button type="submit" disabled={loading || durationInvalid || !siteId || Boolean(unverified)}>
         {loading ? "Running…" : "Run analysis"}
       </Button>
     </form>

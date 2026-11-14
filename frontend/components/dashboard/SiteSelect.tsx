@@ -41,6 +41,11 @@ export function SiteSelect({
         · verification: {selected?.verification_status ?? "unknown"}
         {selected?.gsfc_site_id ? ` · ${selected.gsfc_site_id}` : ""}
       </p>
+      {selected && selected.verification_status !== "verified" ? (
+        <p className="mt-1 inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+          ⚠️ Coordinates unverified in GSFC catalogue
+        </p>
+      ) : null}
     </div>
   );
 }

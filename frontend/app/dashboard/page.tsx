@@ -293,7 +293,22 @@ function DashboardScreen() {
       <Card className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">Timeline and visibility</p>
-          <VisibilityLegend />
+          <div className="flex items-center gap-3">
+            {result?.analysis_id ? (
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:8000/api/v1"}/analysis/${encodeURIComponent(result.analysis_id)}/export.csv`}
+                download={`analysis_${result.analysis_id}.csv`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200 transition hover:border-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-300"
+                title="Download CSV spreadsheet of ephemeris samples"
+              >
+                <svg className="h-3.5 w-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export CSV
+              </a>
+            ) : null}
+            <VisibilityLegend />
+          </div>
         </div>
         <VisibilityBands sample={sample} />
         <TimelineSlider
