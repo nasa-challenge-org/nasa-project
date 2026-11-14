@@ -6,7 +6,7 @@ FastAPI service. Scientific Horizons/LOLA adapters are stubs for Member 4.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env
+cp .env .env
 uvicorn app.main:app --reload --port 8000
 pytest
 ```

@@ -45,7 +45,7 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env
+cp .env .env
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -57,7 +57,7 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 cd frontend
-cp .env.example .env.local
+cp .env .env.local
 npm install
 npm run dev
 ```

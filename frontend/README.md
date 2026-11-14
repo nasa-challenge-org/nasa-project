@@ -1,7 +1,7 @@
 # LunarEdge frontend
 
 ```bash
-cp .env.example .env.local
+cp .env .env.local
 npm install
 npm run dev
 ```
