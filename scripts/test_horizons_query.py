@@ -12,7 +12,8 @@ import argparse
 import json
 import sys
 import urllib.parse
-import urllib.request
+
+import httpx
 
 HORIZONS = "https://ssd.jpl.nasa.gov/api/horizons.api"
 
@@ -42,8 +43,9 @@ def main() -> int:
     if args.dry_run:
         print(url)
         return 0
-    with urllib.request.urlopen(url, timeout=60) as response:  # noqa: S310
-        payload = json.loads(response.read().decode("utf-8"))
+
+    response = httpx.get(HORIZONS, params=params, timeout=60.0)
+    payload = response.json()
     print(json.dumps({k: payload[k] for k in payload if k != "result"}, indent=2))
     print("--- result (truncated) ---")
     print(str(payload.get("result", ""))[:2000])

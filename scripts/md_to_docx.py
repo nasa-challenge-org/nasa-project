@@ -12,7 +12,6 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
-
 NAVY = RGBColor(0x07, 0x11, 0x1C)
 CYAN = RGBColor(0x0E, 0x74, 0x8A)
 AMBER = RGBColor(0xB4, 0x53, 0x09)
