@@ -5,7 +5,8 @@
  * Mapping: Horizons az clockwise from north; el vs local topocentric horizon.
  */
 
-import { useId } from "react";
+import { useId, useState } from "react";
+import { Horizon3D } from "@/components/visualization/Horizon3D";
 import { svgN } from "@/lib/svg";
 import type { Sample } from "@/lib/types";
 import { formatUtc } from "@/lib/time";
@@ -111,6 +112,7 @@ export function HorizonViewer({
   siteName?: string;
   className?: string;
 }) {
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const skyFillId = `sky-fill-${useId().replace(/:/g, "")}`;
   const horizonR = ringRadius(0);
   const sunTrail = trail(samples, "sun", selectedIndex);
@@ -123,25 +125,68 @@ export function HorizonViewer({
         className,
       )}
     >
-      <div className="relative flex flex-1 flex-col px-4 pb-2 pt-4 sm:px-5">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-300/80">
-              Local sky
-            </p>
-            <p className="text-xs text-slate-500">
-              Polar zenith plot · azimuth clockwise from north (Horizons qty 4)
-              · not to scale · geometric horizon only
-            </p>
-          </div>
-          <p className="text-right text-xs text-slate-500">{qualityLabel}</p>
+      {/* View Switcher Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 px-4 py-3 sm:px-5">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-300/80">
+            Local sky
+          </p>
+          <p className="text-xs text-slate-500">
+            {viewMode === "2d"
+              ? "Polar zenith plot · azimuth clockwise from north (Horizons qty 4)"
+              : "3D celestial hemisphere · topocentric lunar horizon"}
+          </p>
         </div>
-        <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="mx-auto h-auto w-full flex-1"
-          role="img"
-          aria-label="Sun and Earth against the local geometric horizon"
-        >
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-xl border border-white/10 bg-black/40 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("2d")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 font-medium transition",
+                viewMode === "2d"
+                  ? "bg-cyan-500/20 text-cyan-300 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              2D Polar
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("3d")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 font-medium transition",
+                viewMode === "3d"
+                  ? "bg-cyan-500/20 text-cyan-300 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              3D Hemisphere
+            </button>
+          </div>
+          <p className="hidden text-right text-xs text-slate-500 sm:block">{qualityLabel}</p>
+        </div>
+      </div>
+
+      {viewMode === "3d" ? (
+        <div className="relative flex-1">
+          <Horizon3D
+            sample={sample}
+            samples={samples}
+            selectedIndex={selectedIndex}
+            siteName={siteName}
+            qualityLabel={qualityLabel}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="relative flex flex-1 flex-col px-4 pb-2 pt-2 sm:px-5">
+            <svg
+              viewBox={`0 0 ${SIZE} ${SIZE}`}
+              className="mx-auto h-auto w-full flex-1"
+              role="img"
+              aria-label="Sun and Earth against the local geometric horizon"
+            >
           <defs>
             <radialGradient id={skyFillId} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#16324a" />
@@ -264,6 +309,8 @@ export function HorizonViewer({
         </span>
         <span className="shrink-0 text-slate-500">geometric only</span>
       </div>
+        </>
+      )}
     </div>
   );
 }
