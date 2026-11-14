@@ -38,7 +38,7 @@ export function CompareTable({ result }: { result: CompareResponse }) {
           {result.aligned_metrics.map((metric) => (
             <tr key={metric.key} className="border-b border-slate-900">
               <td className="py-2 pr-4 text-slate-300">
-                {metric.key} ({metric.unit})
+                {metric.key.replaceAll("_", " ")}
               </td>
               {metric.values.map((value, index) => (
                 <td

@@ -26,12 +26,11 @@ export function MetricStatCard({
   const hasSeries = series.some((point) => point !== null);
 
   return (
-    <Card className="min-h-[220px]">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
+    <Card className="min-h-[180px]" title={quality}>
+      <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-white">
         {formatMetric(value, unit)}
       </p>
-      <p className="mt-1 text-[11px] leading-snug text-slate-500">{quality}</p>
       <div className="mt-4 h-24">
         {hasSeries ? (
           <ResponsiveContainer width="100%" height="100%">

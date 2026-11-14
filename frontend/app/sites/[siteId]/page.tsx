@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
+import { StatusPill } from "@/components/shared/StatusPill";
 import { Card } from "@/components/ui/card";
 import { SiteBriefSkeleton } from "@/components/ui/skeleton";
 import { getSite } from "@/lib/api";
@@ -27,7 +28,7 @@ function Field({
       <p className="text-[11px] uppercase tracking-wide text-slate-500">
         {label}
       </p>
-      <p className="mt-1 break-all text-sm text-slate-100">{display}</p>
+      <p className="mt-1 break-all font-mono text-sm text-slate-100">{display}</p>
     </div>
   );
 }
@@ -58,11 +59,14 @@ function SiteDetailScreen() {
         <>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                {site.gsfc_site_id ?? "GSFC id N/A"}
-              </p>
-              <h2 className="text-2xl font-semibold">{site.name}</h2>
-              <p className="mt-1 text-sm text-slate-400">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs uppercase tracking-wide text-slate-500">
+                  {site.gsfc_site_id ?? "GSFC N/A"}
+                </p>
+                <StatusPill status={site.verification_status} />
+              </div>
+              <h2 className="mt-1 text-2xl font-semibold">{site.name}</h2>
+              <p className="mt-1 font-mono text-sm text-slate-400">
                 {coordinateLabel(site.latitude_deg, site.longitude_east_deg)}
               </p>
             </div>
@@ -71,28 +75,24 @@ function SiteDetailScreen() {
                 href={`/dashboard?site=${site.id}`}
                 className="rounded-full bg-[#3d8bff] px-4 py-2 text-sm font-semibold text-white"
               >
-                Open mission
+                Mission
               </Link>
               <Link
                 href="/compare"
                 className="rounded-full bg-white/10 px-4 py-2 text-sm text-slate-100"
               >
-                Compare window
+                Compare
               </Link>
             </div>
           </div>
-          <p className="max-w-3xl text-sm text-slate-400">
-            {site.description ?? "No catalogue description."}
-          </p>
           <SiteTerrain3D site={site} className="min-h-[22rem]" />
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <Field label="Verification" value={site.verification_status} />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Field
               label="Latitude"
               value={formatMetric(site.latitude_deg, "°")}
             />
             <Field
-              label="Longitude east"
+              label="Longitude E"
               value={formatMetric(site.longitude_east_deg, "°")}
             />
             <Field
@@ -100,21 +100,11 @@ function SiteDetailScreen() {
               value={formatMetric(site.altitude_km, "km")}
             />
             <Field
-              label="Coordinate reference"
-              value={site.coordinate_reference}
+              label="DEM"
+              value={site.dem_product_id}
             />
-            <Field label="LOLA DEM" value={site.dem_product_id} />
-            <Field
-              label="DEM resolution"
-              value={formatMetric(site.dem_resolution_m, "m")}
-            />
-            <Field label="Terrain-aware flags" value={site.terrain_status} />
           </div>
-          <Card className="space-y-2 text-sm text-slate-400">
-            <p>
-              Missing coordinates or altitude are unknown, never zero. Terrain
-              occlusion stays N/A until a verified LOLA profile exists.
-            </p>
+          <Card className="flex flex-wrap gap-4 text-sm">
             {site.source_url ? (
               <a
                 className="text-cyan-400 hover:underline"
@@ -122,17 +112,17 @@ function SiteDetailScreen() {
                 target="_blank"
                 rel="noreferrer"
               >
-                GSFC Product 78
+                GSFC Product 78 ↗
               </a>
             ) : null}
             {site.data_page_url ? (
               <a
-                className="ml-4 text-cyan-400 hover:underline"
+                className="text-cyan-400 hover:underline"
                 href={site.data_page_url}
                 target="_blank"
                 rel="noreferrer"
               >
-                LOLA 5 m/px data
+                LOLA 5 m/px ↗
               </a>
             ) : null}
           </Card>
