@@ -26,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full text-slate-100">
+      <body className="h-full overflow-hidden text-slate-100">
         <Suspense
           fallback={
             <div className="min-h-full p-5">

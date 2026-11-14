@@ -33,7 +33,7 @@ export function SidebarMeta() {
       <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
         South pole
       </p>
-      <p className="mt-1 text-sm text-slate-200">
+      <div className="mt-1 text-sm text-slate-200">
         {!loaded ? (
           <Skeleton className="mt-1 h-4 w-36" />
         ) : sitesCount === null ? (
@@ -41,7 +41,7 @@ export function SidebarMeta() {
         ) : (
           `${sitesCount} GSFC LOLA sites`
         )}
-      </p>
+      </div>
       <p className="text-[11px] text-slate-500">
         Navigator only · not a landing ranking
       </p>
