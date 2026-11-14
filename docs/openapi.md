@@ -35,8 +35,8 @@
 | `GET` | `/api/v1/sites/{site_id}` | Get Site by Slug | Retrieves a specific site's metadata by its catalogue slug. |
 | `POST` | `/api/v1/analysis` | Run Ephemeris Analysis | Retrieves topocentric Sun/Earth Horizons ephemerides and computes metrics. |
 | `POST` | `/api/v1/compare` | Compare Scenarios | Evaluates 2 or 3 site/window scenarios side-by-side with aligned metrics. |
-| `GET` | `/api/v1/analysis/{id}` | Get Cached Analysis | P2 endpoint (currently 501). |
-| `GET` | `/api/v1/analysis/{id}/export.csv` | Export CSV | P2 endpoint (currently 501). |
+| `GET` | `/api/v1/analysis/{analysis_id}` | Get Cached Analysis | Retrieves a previously calculated analysis by its UUID. |
+| `GET` | `/api/v1/analysis/{analysis_id}/export.csv` | Export CSV | Streams ephemeris sample series as a CSV attachment. |
 
 ---
 
@@ -240,14 +240,52 @@ Compares 2 or 3 mission scenarios and aligns metrics into a matrix.
 
 ---
 
+### 3.6 GET `/api/v1/analysis/{analysis_id}`
+Retrieves a previously computed `AnalysisResponse` from the disk cache.
+
+#### Path Parameters
+- `analysis_id` (string, required): The UUID of the analysis session.
+
+#### Response `200 OK`
+Returns the cached `AnalysisResponse` envelope.
+
+#### Response `404 Not Found`
+Returns standard error envelope with code `ANALYSIS_NOT_FOUND`.
+
+---
+
+### 3.7 GET `/api/v1/analysis/{analysis_id}/export.csv`
+Streams ephemeris sample series as `text/csv; charset=utf-8` with attachment header.
+
+#### Path Parameters
+- `analysis_id` (string, required): The UUID of the analysis session.
+
+#### Response `200 OK`
+Headers:
+- `Content-Type: text/csv; charset=utf-8`
+- `Content-Disposition: attachment; filename="analysis_{analysis_id}.csv"`
+
+CSV Columns:
+1. `time_utc`: ISO-8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`)
+2. `sun_azimuth_deg`: Topocentric Sun azimuth ($0^\circ = \text{North}$, clockwise)
+3. `sun_elevation_deg`: Topocentric Sun elevation above local horizontal plane
+4. `sun_geometric_visible`: Smooth-sphere visibility (`true` / `false`)
+5. `sun_relative_incidence`: Dimensionless horizontal incidence $\max(0, \sin(\theta))$
+6. `earth_azimuth_deg`: Topocentric Earth center azimuth
+7. `earth_elevation_deg`: Topocentric Earth center elevation
+8. `earth_geometric_visible`: Smooth-sphere Earth line-of-sight (`true` / `false`)
+
+---
+
 ## 4. Error Code Reference
 
 | Code | HTTP Status | Meaning |
 | :--- | :--- | :--- |
-| `VALIDATION_ERROR` | 422 | Invalid input (e.g. invalid date format, step not in allowed list, scenario count $\notin \{2, 3\}$). |
+| `VALIDATION_ERROR` | 422 / 400 | Invalid input or invalid identifier format. |
 | `SITE_NOT_FOUND` | 404 | The requested `site_id` slug is not recognized in the catalogue. |
+| `ANALYSIS_NOT_FOUND` | 404 | The requested `analysis_id` was not found in cache. |
 | `SITE_COORDINATES_UNVERIFIED` | 422 | The site exists in the catalogue but its geodetic coordinates have not been verified. |
 | `HORIZONS_UPSTREAM_ERROR` | 502 | NASA JPL Horizons rejected parameters or returned an error payload. |
 | `UPSTREAM_TIMEOUT` | 504 | Upstream call to JPL Horizons timed out after 30 seconds. |
-| `NOT_IMPLEMENTED` | 501 | Feature is reserved for a future release (e.g. cached retrieval, CSV export). |
+| `NOT_IMPLEMENTED` | 501 | Feature is reserved for a future release. |
 
