@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { HealthBadge } from "@/components/shared/HealthBadge";
 import { SidebarMeta } from "@/components/shared/SidebarMeta";
 import { SidebarNav } from "@/components/shared/SidebarNav";
 
@@ -21,10 +20,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const title = pageTitle(pathname);
 
   return (
-    <div className="min-h-full p-2 sm:p-3 lg:p-5">
-      <div className="mx-auto flex min-h-[calc(100vh-1rem)] max-w-[1680px] overflow-hidden rounded-[22px] border border-[#2a6a78]/35 bg-[#0d1528]/95 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:rounded-[28px] lg:min-h-[calc(100vh-2.5rem)]">
+    <div className="flex h-full min-h-0 flex-col p-2 sm:p-3 lg:p-5">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1680px] flex-1 overflow-hidden rounded-[22px] border border-[#2a6a78]/35 bg-[#0d1528]/95 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:rounded-[28px]">
         <aside
-          className={`fixed inset-y-2 left-2 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col rounded-3xl border border-white/10 bg-[#10182c] p-4 transition-transform sm:inset-y-3 sm:left-3 lg:static lg:w-64 lg:translate-x-0 lg:rounded-none lg:border-0 lg:border-r ${
+          className={`fixed inset-y-2 left-2 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] shrink-0 flex-col rounded-3xl border border-white/10 bg-[#10182c] p-4 transition-transform sm:inset-y-3 sm:left-3 lg:static lg:h-full lg:w-64 lg:translate-x-0 lg:rounded-none lg:border-0 lg:border-r ${
             open ? "translate-x-0" : "-translate-x-[120%] lg:translate-x-0"
           }`}
         >
@@ -62,8 +61,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           />
         ) : null}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center justify-between gap-3 border-b border-white/8 px-3 py-3 sm:px-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="flex items-center gap-3 border-b border-white/8 px-3 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -82,9 +81,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
-            <HealthBadge />
           </header>
-          <main className="flex-1 overflow-auto p-3 sm:p-5 lg:p-6">
+          <main className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6">
             {children}
           </main>
         </div>
