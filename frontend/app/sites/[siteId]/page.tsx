@@ -9,6 +9,7 @@ import { SiteBriefSkeleton } from "@/components/ui/skeleton";
 import { getSite } from "@/lib/api";
 import { coordinateLabel, formatMetric } from "@/lib/format";
 import type { LandingSite } from "@/lib/types";
+import { SiteTerrain3D } from "@/components/sites/SiteTerrain3D";
 
 function Field({
   label,
@@ -83,6 +84,7 @@ function SiteDetailScreen() {
           <p className="max-w-3xl text-sm text-slate-400">
             {site.description ?? "No catalogue description."}
           </p>
+          <SiteTerrain3D site={site} className="min-h-[22rem]" />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <Field label="Verification" value={site.verification_status} />
             <Field
