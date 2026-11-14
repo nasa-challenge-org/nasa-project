@@ -2,49 +2,56 @@
 
 import { useEffect, useState } from "react";
 import { getHealth } from "@/lib/api";
-import type { HealthResponse } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function HealthBadge() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [label, setLabel] = useState<string | null>(null);
+  const [tone, setTone] = useState<"ok" | "warn" | "bad">("ok");
 
   useEffect(() => {
     let cancelled = false;
     getHealth()
-      .then((data) => {
-        if (!cancelled) {
-          setHealth(data);
-          setError(null);
+      .then((health) => {
+        if (cancelled) return;
+        if (health.horizons_adapter === "stub") {
+          setTone("warn");
+          setLabel("Sun/Earth ephemeris not live");
+        } else {
+          setTone("ok");
+          setLabel("JPL Horizons live");
         }
       })
-      .catch((err: Error) => {
-        if (!cancelled) {
-          setError(err.message);
-        }
+      .catch(() => {
+        if (cancelled) return;
+        setTone("bad");
+        setLabel("Navigator API unreachable");
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (error) {
+  if (!label) {
     return (
-      <span className="rounded border border-rose-500/50 px-2 py-1 text-xs text-rose-300">
-        API offline
-      </span>
+      <Skeleton
+        className="h-7 w-36 rounded-full"
+        aria-label="Checking navigator API"
+      />
     );
   }
-  if (!health) {
-    return (
-      <span className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400">
-        Checking API…
-      </span>
-    );
-  }
+
+  const classes =
+    tone === "bad"
+      ? "bg-rose-500/15 text-rose-300"
+      : tone === "ok"
+        ? "bg-emerald-500/15 text-emerald-300"
+        : "bg-amber-500/15 text-amber-200";
+
   return (
-    <span className="rounded border border-emerald-500/40 px-2 py-1 text-xs text-emerald-300">
-      API {health.status} · sites {health.sites_source ?? "?"} · Horizons{" "}
-      {health.horizons_adapter}
+    <span
+      className={`max-w-[52vw] truncate rounded-full px-3 py-1 text-xs sm:max-w-none ${classes}`}
+    >
+      {label}
     </span>
   );
 }

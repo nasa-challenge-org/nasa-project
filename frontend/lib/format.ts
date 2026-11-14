@@ -7,7 +7,7 @@ export function formatMetric(
   if (value === null || value === undefined) {
     return "N/A";
   }
-  return `${value} ${unit}`;
+  return unit ? `${value} ${unit}` : String(value);
 }
 
 export function isDemoQuality(ephemeris: string | undefined): boolean {

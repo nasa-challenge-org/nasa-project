@@ -282,8 +282,8 @@ def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
         site=SiteRef(
             id=site.id,
             name=site.name,
-            latitude_deg=site.latitude_deg,
-            longitude_east_deg=site.longitude_east_deg,
+            latitude_deg=lat,
+            longitude_east_deg=lon,
         ),
         time=TimeSpan(
             start_utc=start_utc,
