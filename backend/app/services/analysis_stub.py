@@ -22,6 +22,7 @@ from app.schemas.analysis import (
     SiteRef,
     TimeSpan,
 )
+from app.services.analysis_storage import save_analysis
 from app.services.ephemeris_parser import parse_observer_table
 from app.services.horizons_client import HorizonsClient
 from app.services.site_catalogue import get_site
@@ -90,7 +91,7 @@ def build_not_implemented(request: AnalysisRequest) -> AnalysisResponse:
     site = get_site(request.site_id)
     start = request.time.start_utc
     end = _end_utc(request)
-    return AnalysisResponse(
+    res = AnalysisResponse(
         analysis_id=str(uuid4()),
         status="not_implemented",
         site=SiteRef(
@@ -125,6 +126,8 @@ def build_not_implemented(request: AnalysisRequest) -> AnalysisResponse:
             calculation_version="0.2.0",
         ),
     )
+    save_analysis(res)
+    return res
 
 
 def build_demo_response(request: AnalysisRequest) -> AnalysisResponse:
@@ -152,7 +155,7 @@ def build_demo_response(request: AnalysisRequest) -> AnalysisResponse:
             ),
         )
     ]
-    return AnalysisResponse(
+    res = AnalysisResponse(
         analysis_id=f"demo-{uuid4()}",
         status="partial",
         site=SiteRef(
@@ -183,6 +186,8 @@ def build_demo_response(request: AnalysisRequest) -> AnalysisResponse:
             calculation_version="0.2.0-demo",
         ),
     )
+    save_analysis(res)
+    return res
 
 
 def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
@@ -276,7 +281,7 @@ def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
     if alt is None:
         warnings.append("Observer altitude is unverified (using reference ellipsoid 0 km for Horizons query).")
 
-    return AnalysisResponse(
+    res = AnalysisResponse(
         analysis_id=str(uuid4()),
         status="complete" if samples else "partial",
         site=SiteRef(
@@ -307,3 +312,5 @@ def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
             calculation_version="0.2.0",
         ),
     )
+    save_analysis(res)
+    return res
