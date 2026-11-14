@@ -126,11 +126,6 @@ export function getSite(siteId: string, forceRefresh = false): Promise<LandingSi
   );
 }
 
-// Background preload on client load for fast page transitions
-if (typeof window !== "undefined") {
-  getSites().catch(() => {});
-}
-
 export function postAnalysis(
   payload: AnalysisRequest,
 ): Promise<AnalysisResponse> {

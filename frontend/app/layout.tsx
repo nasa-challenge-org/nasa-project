@@ -25,8 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="h-full overflow-hidden text-slate-100">
+      <body className="h-full overflow-hidden text-slate-100" suppressHydrationWarning>
         <Suspense
           fallback={
             <div className="min-h-full p-5">
