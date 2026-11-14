@@ -21,13 +21,15 @@
   - `CORS_ORIGINS=https://<vercel-app>.vercel.app` (comma-separated; no `*`)
   - `HORIZONS_BASE_URL=https://ssd.jpl.nasa.gov/api/horizons.api`
   - `DATA_DIR` on persistent disk if cache is used
-  - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` only if persistence is enabled (server-side)
+  - `SUPABASE_URL` / `SUPABASE_ANON_KEY` so `GET /sites` can read `landing_sites`
+  - `SUPABASE_DATABASE_URL` optional (direct Postgres; never on Vercel frontend)
+  - `SUPABASE_SERVICE_ROLE_KEY` only if privileged writes are added (not required for MVP)
 
 After the Vercel URL exists, add it to `CORS_ORIGINS` and redeploy the API. Local default is `http://localhost:3000` only.
 
 ## Supabase
 
-Apply `supabase/migrations/` in the SQL editor or CLI. Confirm RLS is enabled. Anon key in the browser; service role only on the backend.
+Apply `supabase/migrations/` in the SQL editor (init, then seed). Starting the API does not run those files. Confirm RLS is enabled. Publishable/anon key in the browser and for backend reads. Direct DB URI and service-role key are backend-only. No Storage bucket for the MVP.
 
 ## Smoke checks after deploy
 

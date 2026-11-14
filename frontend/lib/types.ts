@@ -135,6 +135,7 @@ export interface HealthResponse {
   version: string;
   environment: string;
   supabase_configured: boolean;
+  sites_source?: string;
   horizons_adapter: string;
   demo_analysis_enabled: boolean;
 }
