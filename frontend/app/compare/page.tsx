@@ -1,30 +1,42 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { CompareTable } from "@/components/compare/CompareTable";
+import { SiteSelect } from "@/components/dashboard/SiteSelect";
 import { DemoBanner } from "@/components/shared/DemoBanner";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
+import { StatusBanner } from "@/components/shared/StatusBanner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ChipSkeletonRow, CompareTableSkeleton } from "@/components/ui/skeleton";
+import { FieldLabel, SelectInput, TextInput } from "@/components/ui/field";
 import { ApiClientError, getSites, postCompare } from "@/lib/api";
 import { DEMO_COMPARE } from "@/lib/fixtures/demo-analysis";
-import { formatMetric } from "@/lib/format";
-import type { CompareResponse, LandingSite } from "@/lib/types";
+import { utcIsoFromDatetimeLocal } from "@/lib/time";
+import type { CompareResponse, LandingSite, ScenarioInput } from "@/lib/types";
 
 const allowDemo = process.env.NEXT_PUBLIC_ALLOW_DEMO_FIXTURE === "true";
 
-function scenarioPayload(siteId: string, label: string) {
+function scenarioPayload(
+  siteId: string,
+  label: string,
+  startUtc: string,
+  durationHours: number,
+  stepMinutes: number,
+  includeTerrain: boolean,
+): ScenarioInput {
   return {
     label,
     request: {
       site_id: siteId,
       time: {
-        start_utc: "2027-01-01T00:00:00Z",
-        duration_hours: 72,
-        step_minutes: 30 as const,
+        start_utc: utcIsoFromDatetimeLocal(startUtc),
+        duration_hours: durationHours,
+        step_minutes: stepMinutes as 5 | 10 | 15 | 30 | 60,
       },
       options: {
-        include_terrain: false,
-        earth_visibility_mode: "center" as const,
+        include_terrain: includeTerrain,
+        earth_visibility_mode: "center",
         solar_array_tilt_deg: 0,
       },
     },
@@ -32,9 +44,15 @@ function scenarioPayload(siteId: string, label: string) {
 }
 
 export default function ComparePage() {
-  const [sites, setSites] = useState<LandingSite[]>([]);
+  const [sites, setSites] = useState<LandingSite[] | null>(null);
   const [siteA, setSiteA] = useState("connecting-ridge");
   const [siteB, setSiteB] = useState("shackleton-rim");
+  const [siteC, setSiteC] = useState("malapert-massif");
+  const [includeC, setIncludeC] = useState(false);
+  const [startUtc, setStartUtc] = useState("2027-01-01T00:00");
+  const [durationHours, setDurationHours] = useState(24);
+  const [stepMinutes, setStepMinutes] = useState(60);
+  const [includeTerrain, setIncludeTerrain] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -45,28 +63,48 @@ export default function ComparePage() {
       .catch((err: Error) => setError(err.message));
   }, []);
 
+  const duplicate =
+    siteA === siteB || (includeC && (siteC === siteA || siteC === siteB));
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (duplicate) {
+      setError("Choose different sites for each scenario.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const comparison = await postCompare({
-        scenarios: [
-          scenarioPayload(siteA, "Scenario A"),
-          scenarioPayload(siteB, "Scenario B"),
-        ],
-      });
-      setResult(comparison);
+      const scenarios = [
+        scenarioPayload(siteA, "Scenario A", startUtc, durationHours, stepMinutes, includeTerrain),
+        scenarioPayload(siteB, "Scenario B", startUtc, durationHours, stepMinutes, includeTerrain),
+      ];
+      if (includeC) {
+        scenarios.push(
+          scenarioPayload(
+            siteC,
+            "Scenario C",
+            startUtc,
+            durationHours,
+            stepMinutes,
+            includeTerrain,
+          ),
+        );
+      }
+      setResult(await postCompare({ scenarios }));
     } catch (err) {
+      const apiError =
+        err instanceof ApiClientError
+          ? `${err.code}: ${err.message}`
+          : err instanceof Error
+            ? err.message
+            : "Compare failed";
       if (allowDemo) {
         setResult(DEMO_COMPARE);
-        setError(
-          err instanceof ApiClientError
-            ? `${err.code}: ${err.message} Showing labelled DEMO comparison.`
-            : "API unavailable. Showing labelled DEMO comparison.",
-        );
+        setError(`${apiError} Showing labelled DEMO / MOCK comparison.`);
       } else {
-        setError(err instanceof Error ? err.message : "Compare failed");
+        setResult(null);
+        setError(apiError);
       }
     } finally {
       setLoading(false);
@@ -79,84 +117,135 @@ export default function ComparePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Scenario comparison</h1>
-      <p className="text-sm text-slate-400">
-        Compares two UTC windows with the same metric keys. Null stays
-        unavailable. Member 2 can add a third scenario and charts.
+      <p className="max-w-3xl text-sm text-slate-400">
+        Same UTC window on two or three candidates. Missing values stay N/A.
+        This does not rank landing safety.
       </p>
       {error ? <ErrorBanner title="Compare" message={error} /> : null}
       <DemoBanner show={Boolean(demo)} />
+      {sites === null && !error ? <ChipSkeletonRow /> : null}
 
       <Card>
-        <form className="flex flex-wrap items-end gap-3" onSubmit={onSubmit}>
-          <label className="text-sm">
-            Scenario A
-            <select
-              className="mt-1 block rounded border border-slate-700 bg-slate-950 px-2 py-2"
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <SiteSelect
+              id="compare-a"
+              sites={sites ?? []}
               value={siteA}
-              onChange={(event) => setSiteA(event.target.value)}
-            >
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Scenario B
-            <select
-              className="mt-1 block rounded border border-slate-700 bg-slate-950 px-2 py-2"
+              onChange={setSiteA}
+              disabled={loading || sites === null}
+            />
+            <SiteSelect
+              id="compare-b"
+              sites={sites ?? []}
               value={siteB}
-              onChange={(event) => setSiteB(event.target.value)}
-            >
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Button type="submit" disabled={loading || siteA === siteB}>
+              onChange={setSiteB}
+              disabled={loading || sites === null}
+            />
+          </div>
+          <div className="flex items-start gap-2">
+            <input
+              id="include-c"
+              type="checkbox"
+              className="mt-1"
+              checked={includeC}
+              onChange={(event) => setIncludeC(event.target.checked)}
+            />
+            <label htmlFor="include-c" className="text-sm">
+              Add a third scenario
+            </label>
+          </div>
+          {includeC ? (
+            <SiteSelect
+              id="compare-c"
+              sites={sites ?? []}
+              value={siteC}
+              onChange={setSiteC}
+              disabled={loading || sites === null}
+            />
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <FieldLabel htmlFor="compare-start">Start (UTC)</FieldLabel>
+              <TextInput
+                id="compare-start"
+                type="datetime-local"
+                required
+                value={startUtc}
+                onChange={(event) => setStartUtc(event.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="compare-duration">Duration (hours)</FieldLabel>
+              <TextInput
+                id="compare-duration"
+                type="number"
+                min={1}
+                max={336}
+                value={durationHours}
+                onChange={(event) =>
+                  setDurationHours(Number(event.target.value))
+                }
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="compare-step">Step (minutes)</FieldLabel>
+              <SelectInput
+                id="compare-step"
+                value={stepMinutes}
+                onChange={(event) => setStepMinutes(Number(event.target.value))}
+              >
+                {[5, 10, 15, 30, 60].map((step) => (
+                  <option key={step} value={step}>
+                    {step}
+                  </option>
+                ))}
+              </SelectInput>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <input
+              id="compare-terrain"
+              type="checkbox"
+              className="mt-1"
+              checked={includeTerrain}
+              onChange={(event) => setIncludeTerrain(event.target.checked)}
+            />
+            <label htmlFor="compare-terrain" className="text-sm text-slate-300">
+              Request terrain-aware analysis (unavailable until verified)
+            </label>
+          </div>
+          {duplicate ? (
+            <p className="text-sm text-rose-300" role="alert">
+              Scenarios must use different sites.
+            </p>
+          ) : null}
+          <Button type="submit" disabled={loading || duplicate || sites === null}>
             {loading ? "Comparing…" : "Compare"}
           </Button>
         </form>
       </Card>
 
-      {result ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400">
-                <th className="py-2 pr-4">Metric</th>
-                {result.scenarios.map((scenario) => (
-                  <th key={scenario.index} className="py-2 pr-4">
-                    {scenario.label ?? `Scenario ${scenario.index + 1}`}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {result.aligned_metrics.map((metric) => (
-                <tr key={metric.key} className="border-b border-slate-900">
-                  <td className="py-2 pr-4 text-slate-300">
-                    {metric.key} ({metric.unit})
-                  </td>
-                  {metric.values.map((value, index) => (
-                    <td key={`${metric.key}-${index}`} className="py-2 pr-4">
-                      {formatMetric(value, metric.unit)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <ul className="mt-3 list-disc pl-5 text-xs text-slate-500">
+      {loading ? <CompareTableSkeleton /> : null}
+      {result && !loading ? (
+        <Card className="space-y-3">
+          <p className="text-xs text-slate-500">
+            Status {result.status}. Quality labels are per column. Missing
+            aligned values are N/A.
+          </p>
+          <CompareTable result={result} />
+          <ul className="list-disc pl-5 text-xs text-slate-500">
             {result.warnings.map((warning) => (
               <li key={warning}>{warning}</li>
             ))}
           </ul>
-        </div>
+        </Card>
+      ) : !loading ? (
+        <StatusBanner
+          tone="empty"
+          title="No comparison yet"
+          message="Pick two or three sites and the same UTC window."
+        />
       ) : null}
     </div>
   );

@@ -13,6 +13,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -79,7 +80,9 @@ class HorizonsClient:
         return self.cache_dir / filename
 
     def _check_fixture_fallback(self, target: str, longitude_east_deg: float, latitude_deg: float) -> dict[str, Any] | None:
-        """Check for offline test fixtures if connecting-ridge is requested."""
+        """Offline fixtures only during pytest or HORIZONS_USE_FIXTURES=1."""
+        if not os.environ.get("PYTEST_CURRENT_TEST") and os.environ.get("HORIZONS_USE_FIXTURES") != "1":
+            return None
         if abs(latitude_deg - (-89.4389)) < 0.05 and abs(longitude_east_deg - 222.9040) < 0.1:
             name = "sun" if target == "10" else "earth" if target == "399" else None
             if name:

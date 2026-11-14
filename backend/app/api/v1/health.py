@@ -24,6 +24,6 @@ def health() -> HealthResponse:
             )
         ),
         sites_source="supabase" if remote_sites else "json_fallback",
-        horizons_adapter="stub",
+        horizons_adapter="implemented",
         demo_analysis_enabled=settings.enable_demo_analysis,
     )

@@ -4,7 +4,7 @@ def test_health_ok(client):
     body = response.json()
     assert body["status"] == "ok"
     assert body["service"] == "lunaredge-api"
-    assert body["horizons_adapter"] == "stub"
+    assert body["horizons_adapter"] == "implemented"
     assert body["demo_analysis_enabled"] is False
     assert body["sites_source"] in {"supabase", "json_fallback"}
 

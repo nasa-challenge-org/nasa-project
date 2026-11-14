@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppHeader } from "@/components/shared/AppHeader";
+import { AppShell } from "@/components/shared/AppShell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,11 +26,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-slate-950 text-slate-100">
-        <AppHeader />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-          {children}
-        </main>
+      <body className="min-h-full text-slate-100">
+        <Suspense
+          fallback={
+            <div className="min-h-full p-5">
+              <div className="mx-auto h-[calc(100vh-2.5rem)] max-w-[1680px] animate-pulse rounded-[28px] border border-white/8 bg-[#0d1528]" />
+            </div>
+          }
+        >
+          <AppShell>{children}</AppShell>
+        </Suspense>
       </body>
     </html>
   );

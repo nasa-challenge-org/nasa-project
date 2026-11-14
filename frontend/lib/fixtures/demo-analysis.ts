@@ -17,7 +17,7 @@ export const DEMO_ANALYSIS: AnalysisResponse = {
     start_utc: "2027-01-01T00:00:00Z",
     end_utc: "2027-01-04T00:00:00Z",
     step_minutes: 30,
-    sample_count: 1,
+    sample_count: 5,
   },
   quality: {
     ephemeris: "demo_mock",
@@ -34,24 +34,28 @@ export const DEMO_ANALYSIS: AnalysisResponse = {
     terrain_slope_mean_deg: null,
   },
   samples: [
-    {
-      time_utc: "2027-01-01T00:00:00Z",
-      sun: {
-        azimuth_deg: null,
-        elevation_deg: null,
-        geometric_visible: null,
-        terrain_visible: null,
-        relative_incidence: null,
-      },
-      earth: {
-        azimuth_deg: null,
-        elevation_deg: null,
-        geometric_visible: null,
-        terrain_visible: null,
-        visibility_fraction: null,
-      },
+    "2027-01-01T00:00:00Z",
+    "2027-01-01T06:00:00Z",
+    "2027-01-01T12:00:00Z",
+    "2027-01-01T18:00:00Z",
+    "2027-01-02T00:00:00Z",
+  ].map((time_utc) => ({
+    time_utc,
+    sun: {
+      azimuth_deg: null,
+      elevation_deg: null,
+      geometric_visible: null,
+      terrain_visible: null,
+      relative_incidence: null,
     },
-  ],
+    earth: {
+      azimuth_deg: null,
+      elevation_deg: null,
+      geometric_visible: null,
+      terrain_visible: null,
+      visibility_fraction: null,
+    },
+  })),
   provenance: {
     sun_source: "DEMO / MOCK",
     earth_source: "DEMO / MOCK",
