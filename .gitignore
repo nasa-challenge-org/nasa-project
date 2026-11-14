@@ -1,0 +1,47 @@
+# Secrets and local env
+.env
+.env.*
+!.env.example
+!**/.env.example
+frontend/.env.local
+backend/.env
+
+# Python
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/*.egg-info/
+.venv/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+
+# Data caches and DEM rasters (NASA products stay local, not in git)
+backend/data/cache/**
+!backend/data/cache/.gitkeep
+backend/data/dem/**
+!backend/data/dem/.gitkeep
+!backend/data/dem/README.md
+*.tif
+*.tiff
+*.jp2
+*.img
+*.lbl
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Logs and coverage
+*.log
+htmlcov/
+.coverage
+coverage.xml

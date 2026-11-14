@@ -1,0 +1,16 @@
+# Example Render blueprint. Adjust the service name after you create the account.
+services:
+  - type: web
+    name: lunaredge-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: HORIZONS_BASE_URL
+        value: https://ssd.jpl.nasa.gov/api/horizons.api
