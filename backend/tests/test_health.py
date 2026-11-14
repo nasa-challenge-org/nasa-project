@@ -6,6 +6,7 @@ def test_health_ok(client):
     assert body["service"] == "lunaredge-api"
     assert body["horizons_adapter"] == "stub"
     assert body["demo_analysis_enabled"] is False
+    assert body["sites_source"] in {"supabase", "json_fallback"}
 
 
 def test_cors_allows_localhost(client):

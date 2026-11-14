@@ -43,7 +43,8 @@ export function HealthBadge() {
   }
   return (
     <span className="rounded border border-emerald-500/40 px-2 py-1 text-xs text-emerald-300">
-      API {health.status} · Horizons {health.horizons_adapter}
+      API {health.status} · sites {health.sites_source ?? "?"} · Horizons{" "}
+      {health.horizons_adapter}
     </span>
   );
 }

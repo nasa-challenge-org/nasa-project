@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     enable_demo_analysis: bool = False
     supabase_url: str = ""
+    supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
+    supabase_database_url: str = ""
     horizons_base_url: str = "https://ssd.jpl.nasa.gov/api/horizons.api"
     data_dir: Path = BACKEND_ROOT / "data"
     ephemeris_cache_ttl_seconds: int = 86400

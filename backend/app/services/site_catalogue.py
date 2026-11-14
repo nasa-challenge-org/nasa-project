@@ -21,11 +21,16 @@ def load_catalogue() -> list[LandingSite]:
 
 
 def list_sites() -> list[LandingSite]:
+    from app.services.supabase_sites import fetch_landing_sites
+
+    remote = fetch_landing_sites()
+    if remote:
+        return remote
     return load_catalogue()
 
 
 def get_site(site_id: str) -> LandingSite:
-    for site in load_catalogue():
+    for site in list_sites():
         if site.id == site_id or site.slug == site_id:
             return site
     raise ApiError(
