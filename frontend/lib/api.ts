@@ -83,16 +83,52 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+let sitesCache: LandingSite[] | null = null;
+let sitesPromise: Promise<LandingSite[]> | null = null;
+const siteCache = new Map<string, LandingSite>();
+
 export function getHealth(): Promise<HealthResponse> {
   return request<HealthResponse>("/health");
 }
 
-export function getSites(): Promise<LandingSite[]> {
-  return request<LandingSite[]>("/sites");
+export function getSites(forceRefresh = false): Promise<LandingSite[]> {
+  if (!forceRefresh && sitesCache) {
+    return Promise.resolve(sitesCache);
+  }
+  if (!forceRefresh && sitesPromise) {
+    return sitesPromise;
+  }
+  sitesPromise = request<LandingSite[]>("/sites")
+    .then((data) => {
+      sitesCache = data;
+      for (const site of data) {
+        siteCache.set(site.id, site);
+      }
+      sitesPromise = null;
+      return data;
+    })
+    .catch((err) => {
+      sitesPromise = null;
+      throw err;
+    });
+  return sitesPromise;
 }
 
-export function getSite(siteId: string): Promise<LandingSite> {
-  return request<LandingSite>(`/sites/${encodeURIComponent(siteId)}`);
+export function getSite(siteId: string, forceRefresh = false): Promise<LandingSite> {
+  if (!forceRefresh && siteCache.has(siteId)) {
+    return Promise.resolve(siteCache.get(siteId)!);
+  }
+  return request<LandingSite>(`/sites/${encodeURIComponent(siteId)}`).then(
+    (data) => {
+      siteCache.set(siteId, data);
+      return data;
+    },
+  );
+}
+
+// Background preload on client load for fast page transitions
+if (typeof window !== "undefined") {
+  getSites().catch(() => {});
 }
 
 export function postAnalysis(

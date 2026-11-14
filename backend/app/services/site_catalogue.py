@@ -56,13 +56,22 @@ def _overlay_verified_coordinates(rows: list[LandingSite]) -> list[LandingSite]:
     return merged
 
 
-def list_sites() -> list[LandingSite]:
+_cached_sites: list[LandingSite] | None = None
+
+
+def list_sites(force_refresh: bool = False) -> list[LandingSite]:
+    global _cached_sites
+    if _cached_sites is not None and not force_refresh:
+        return _cached_sites
+
     from app.services.supabase_sites import fetch_landing_sites
 
     remote = fetch_landing_sites()
     if remote:
-        return _overlay_verified_coordinates(remote)
-    return load_catalogue()
+        _cached_sites = _overlay_verified_coordinates(remote)
+    else:
+        _cached_sites = load_catalogue()
+    return _cached_sites
 
 
 def get_site(site_id: str) -> LandingSite:

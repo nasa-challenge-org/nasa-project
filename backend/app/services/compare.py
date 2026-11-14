@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 from app.core.errors import ApiError
@@ -27,40 +28,60 @@ def _metric_value(summary: AnalysisSummary | None, key: str) -> float | None:
     return value
 
 
+def _evaluate_scenario(
+    index: int,
+    scenario,
+) -> tuple[int, ScenarioResult, str | None]:
+    request: AnalysisRequest = scenario.request
+    try:
+        analysis = run_analysis(request)
+        return (
+            index,
+            ScenarioResult(
+                index=index,
+                label=scenario.label,
+                analysis=analysis,
+                error=None,
+            ),
+            None,
+        )
+    except ApiError as exc:
+        return (
+            index,
+            ScenarioResult(
+                index=index,
+                label=scenario.label,
+                analysis=build_not_implemented(request)
+                if exc.code in ("ANALYSIS_NOT_IMPLEMENTED", "SITE_COORDINATES_UNVERIFIED")
+                else None,
+                error={
+                    "code": exc.code,
+                    "message": exc.message,
+                    "details": exc.details,
+                },
+            ),
+            f"Scenario {index}: {exc.code}",
+        )
+
+
 def run_compare(payload: CompareRequest) -> CompareResponse:
-    results: list[ScenarioResult] = []
     warnings: list[str] = [
         "Missing metrics stay null/unavailable; they are not converted to zero."
     ]
 
-    for index, scenario in enumerate(payload.scenarios):
-        request: AnalysisRequest = scenario.request
-        try:
-            analysis = run_analysis(request)
-            results.append(
-                ScenarioResult(
-                    index=index,
-                    label=scenario.label,
-                    analysis=analysis,
-                    error=None,
-                )
+    with ThreadPoolExecutor(max_workers=len(payload.scenarios) or 1) as executor:
+        evaluations = list(
+            executor.map(
+                lambda pair: _evaluate_scenario(pair[0], pair[1]),
+                enumerate(payload.scenarios),
             )
-        except ApiError as exc:
-            results.append(
-                ScenarioResult(
-                    index=index,
-                    label=scenario.label,
-                    analysis=build_not_implemented(request)
-                    if exc.code in ("ANALYSIS_NOT_IMPLEMENTED", "SITE_COORDINATES_UNVERIFIED")
-                    else None,
-                    error={
-                        "code": exc.code,
-                        "message": exc.message,
-                        "details": exc.details,
-                    },
-                )
-            )
-            warnings.append(f"Scenario {index}: {exc.code}")
+        )
+
+    evaluations.sort(key=lambda x: x[0])
+    results: list[ScenarioResult] = [item[1] for item in evaluations]
+    for item in evaluations:
+        if item[2]:
+            warnings.append(item[2])
 
     aligned: list[AlignedMetric] = []
     for key, unit in METRIC_SPECS:

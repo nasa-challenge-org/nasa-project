@@ -6,6 +6,7 @@ Computes solar and Earth metrics according to frozen rules.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -224,25 +225,30 @@ def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
 
     client = HorizonsClient()
 
-    # Query Sun (target 10) and Earth (target 399) observer tables
-    sun_payload = client.get_observer_ephemeris_sync(
-        target="10",
-        longitude_east_deg=lon,
-        latitude_deg=lat,
-        altitude_km=alt,
-        start_utc=start_utc,
-        stop_utc=end_utc,
-        step_minutes=step_minutes,
-    )
-    earth_payload = client.get_observer_ephemeris_sync(
-        target="399",
-        longitude_east_deg=lon,
-        latitude_deg=lat,
-        altitude_km=alt,
-        start_utc=start_utc,
-        stop_utc=end_utc,
-        step_minutes=step_minutes,
-    )
+    # Query Sun (target 10) and Earth (target 399) observer tables concurrently
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        sun_future = executor.submit(
+            client.get_observer_ephemeris_sync,
+            target="10",
+            longitude_east_deg=lon,
+            latitude_deg=lat,
+            altitude_km=alt,
+            start_utc=start_utc,
+            stop_utc=end_utc,
+            step_minutes=step_minutes,
+        )
+        earth_future = executor.submit(
+            client.get_observer_ephemeris_sync,
+            target="399",
+            longitude_east_deg=lon,
+            latitude_deg=lat,
+            altitude_km=alt,
+            start_utc=start_utc,
+            stop_utc=end_utc,
+            step_minutes=step_minutes,
+        )
+        sun_payload = sun_future.result()
+        earth_payload = earth_future.result()
 
     sun_records = parse_observer_table(sun_payload.get("result", ""))
     earth_records = parse_observer_table(earth_payload.get("result", ""))
