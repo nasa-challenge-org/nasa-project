@@ -30,8 +30,8 @@ def test_compare_null_metrics_not_zero(client):
         "/api/v1/compare",
         json={
             "scenarios": [
-                _scenario("connecting-ridge", "A"),
-                _scenario("shackleton-rim", "B"),
+                _scenario("leibnitz-beta-plateau", "A"),
+                _scenario("malapert-massif", "B"),
             ]
         },
     )
@@ -49,7 +49,19 @@ def test_compare_null_metrics_not_zero(client):
         assert scenario["analysis"]["quality"]["ephemeris"] == "unavailable"
 
 
-def test_analysis_not_implemented(client):
+def test_analysis_unverified_coordinates(client):
+    response = client.post(
+        "/api/v1/analysis",
+        json={
+            "site_id": "leibnitz-beta-plateau",
+            "time": BASE_TIME,
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "SITE_COORDINATES_UNVERIFIED"
+
+
+def test_analysis_verified_site(client):
     response = client.post(
         "/api/v1/analysis",
         json={
@@ -57,8 +69,13 @@ def test_analysis_not_implemented(client):
             "time": BASE_TIME,
         },
     )
-    assert response.status_code == 501
-    assert response.json()["error"]["code"] == "ANALYSIS_NOT_IMPLEMENTED"
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "complete"
+    assert data["quality"]["ephemeris"] == "jpl_horizons"
+    assert data["site"]["latitude_deg"] is not None
+    assert data["summary"]["sunlight_hours"] is not None
+    assert len(data["samples"]) > 0
 
 
 def test_unknown_site_on_analysis(client):

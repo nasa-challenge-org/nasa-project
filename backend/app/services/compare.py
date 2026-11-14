@@ -51,7 +51,7 @@ def run_compare(payload: CompareRequest) -> CompareResponse:
                     index=index,
                     label=scenario.label,
                     analysis=build_not_implemented(request)
-                    if exc.code == "ANALYSIS_NOT_IMPLEMENTED"
+                    if exc.code in ("ANALYSIS_NOT_IMPLEMENTED", "SITE_COORDINATES_UNVERIFIED")
                     else None,
                     error={
                         "code": exc.code,
