@@ -7,12 +7,16 @@ def test_list_sites(client):
     assert "connecting-ridge" in slugs
     assert "shackleton-rim" in slugs
     for row in sites:
-        assert row["verification_status"] == "unverified"
-        assert row["latitude_deg"] is None
-        assert row["longitude_east_deg"] is None
-        assert row["altitude_km"] is None
         assert row["source_url"]
         assert row["dem_product_id"]
+        assert row["altitude_km"] is None
+        if row["verification_status"] == "verified":
+            assert row["latitude_deg"] is not None
+            assert row["longitude_east_deg"] is not None
+        else:
+            assert row["verification_status"] == "unverified"
+            assert row["latitude_deg"] is None
+            assert row["longitude_east_deg"] is None
 
 
 def test_site_detail_and_missing(client):

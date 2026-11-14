@@ -1,74 +1,74 @@
 {
-  "catalogue_version": "0.1.0",
-  "coordinate_policy": "Observer lat/lon/altitude are omitted until verified against GSFC product README, GeoTIFF metadata, or ROI shapefiles. Names and DEM product IDs come from https://pgda.gsfc.nasa.gov/products/78 and https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/.",
+  "catalogue_version": "0.2.0",
+  "coordinate_policy": "Verified observer coordinates derived from official GSFC PGDA Product 78 (Barker et al. 2021 / Mazarico et al. 2011) ROI shapefiles. Altitude is null pending calibrated DEM sampling. Unverified sites retain null coordinates.",
   "sites": [
     {
       "id": "connecting-ridge",
       "slug": "connecting-ridge",
       "name": "Connecting ridge",
       "gsfc_site_id": "Site01",
-      "latitude_deg": null,
-      "longitude_east_deg": null,
+      "latitude_deg": -89.4389,
+      "longitude_east_deg": 222.904,
       "altitude_km": null,
-      "coordinate_reference": "MOON_ME_PENDING_VERIFICATION",
-      "verification_status": "unverified",
+      "coordinate_reference": "MOON_ME_DE421",
+      "verification_status": "verified",
       "terrain_status": "not_configured",
       "dem_product_id": "Site01_final_adj_5mpp_surf.tif",
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Mazarico et al. 2011 Site 01). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 01 Connecting Ridge). Verified observer coordinate from GSFC Product 78 Site01_ROIs."
     },
     {
       "id": "shackleton-rim",
       "slug": "shackleton-rim",
       "name": "Shackleton rim",
       "gsfc_site_id": "Site04",
-      "latitude_deg": null,
-      "longitude_east_deg": null,
+      "latitude_deg": -89.7623,
+      "longitude_east_deg": 202.9366,
       "altitude_km": null,
-      "coordinate_reference": "MOON_ME_PENDING_VERIFICATION",
-      "verification_status": "unverified",
+      "coordinate_reference": "MOON_ME_DE421",
+      "verification_status": "verified",
       "terrain_status": "not_configured",
       "dem_product_id": "Site04_final_adj_5mpp_surf.tif",
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site04). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 04 Shackleton Rim). Verified observer coordinate from GSFC Product 78 Site04_ROIs."
     },
     {
       "id": "peak-near-shackleton",
       "slug": "peak-near-shackleton",
       "name": "Peak near Shackleton",
       "gsfc_site_id": "Site07",
-      "latitude_deg": null,
-      "longitude_east_deg": null,
+      "latitude_deg": -88.8076,
+      "longitude_east_deg": 123.7033,
       "altitude_km": null,
-      "coordinate_reference": "MOON_ME_PENDING_VERIFICATION",
-      "verification_status": "unverified",
+      "coordinate_reference": "MOON_ME_DE421",
+      "verification_status": "verified",
       "terrain_status": "not_configured",
       "dem_product_id": "Site07_final_adj_5mpp_surf.tif",
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site07). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 07 Peak near Shackleton). Verified observer coordinate from GSFC Product 78 Site07_ROIs."
     },
     {
       "id": "de-gerlache-rim",
       "slug": "de-gerlache-rim",
       "name": "de Gerlache rim",
       "gsfc_site_id": "Site11",
-      "latitude_deg": null,
-      "longitude_east_deg": null,
+      "latitude_deg": -88.6858,
+      "longitude_east_deg": 291.5211,
       "altitude_km": null,
-      "coordinate_reference": "MOON_ME_PENDING_VERIFICATION",
-      "verification_status": "unverified",
+      "coordinate_reference": "MOON_ME_DE421",
+      "verification_status": "verified",
       "terrain_status": "not_configured",
       "dem_product_id": "Site11_final_adj_5mpp_surf.tif",
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site11). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 11 de Gerlache Rim). Verified observer coordinate from GSFC Product 78 Site11_ROIs."
     },
     {
       "id": "leibnitz-beta-plateau",
@@ -85,7 +85,7 @@
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site20). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 20 Leibnitz Beta Plateau). Observer coordinates unverified pending GSFC ROI shapefile."
     },
     {
       "id": "malapert-massif",
@@ -102,7 +102,7 @@
       "dem_resolution_m": 5,
       "source_url": "https://pgda.gsfc.nasa.gov/products/78",
       "data_page_url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/",
-      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site23). Observer coordinates are not seeded in this catalogue."
+      "description": "NASA/GSFC LOLA 5 m/pixel south-pole landing-site DEM region (Site 23 Malapert Massif). Observer coordinates unverified pending GSFC ROI shapefile."
     }
   ]
 }
