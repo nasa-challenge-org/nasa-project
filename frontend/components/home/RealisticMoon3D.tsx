@@ -18,6 +18,7 @@ import Link from "next/link";
 interface MoonSite {
   id: string;
   name: string;
+  code: string;
   gsfcId: string;
   lat: number;
   lon: number;
@@ -34,6 +35,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "connecting-ridge",
     name: "Connecting Ridge",
+    code: "CR",
     gsfcId: "GSFC Product 78 Site 01",
     lat: -89.44,
     lon: 222.5,
@@ -47,6 +49,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "shackleton-rim",
     name: "Shackleton Rim",
+    code: "SR",
     gsfcId: "GSFC Product 78 Site 02",
     lat: -89.66,
     lon: 129.8,
@@ -60,6 +63,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "malapert-massif",
     name: "Malapert Massif",
+    code: "MM",
     gsfcId: "GSFC Product 78 Site 03",
     lat: -85.99,
     lon: 2.9,
@@ -73,6 +77,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "haworth-rim",
     name: "Haworth Rim",
+    code: "HR",
     gsfcId: "GSFC Product 78 Site 04",
     lat: -87.87,
     lon: 354.9,
@@ -86,6 +91,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "de-gerlache-rim",
     name: "de Gerlache Rim",
+    code: "DG",
     gsfcId: "GSFC Product 78 Site 05",
     lat: -88.71,
     lon: 68.3,
@@ -99,6 +105,7 @@ const CANDIDATE_SITES: MoonSite[] = [
   {
     id: "peak-near-shackleton",
     name: "Peak Near Shackleton",
+    code: "PS",
     gsfcId: "GSFC Product 78 Site 06",
     lat: -88.8,
     lon: 124.5,
@@ -270,32 +277,34 @@ export function RealisticMoon3D() {
                     {/* Pulsing Target Beacon on Selected Site */}
                     {isSelected && (
                       <span
-                        className="absolute -inset-2.5 rounded-full animate-ping opacity-75"
+                        className="absolute -inset-2 rounded-full animate-ping opacity-75"
                         style={{ backgroundColor: site.color }}
                       />
                     )}
 
-                    {/* Site Target Reticle */}
+                    {/* Site Target Reticle with 2-Letter Callsign */}
                     <div
-                      className={`relative flex items-center justify-center h-5 w-5 rounded-full border shadow-lg transition-transform ${
+                      className={`relative flex items-center justify-center h-6 w-6 rounded-full border shadow-lg transition-transform ${
                         isSelected
-                          ? "scale-125 border-white shadow-[0_0_12px_#ffffff]"
-                          : "border-white/70 hover:scale-110"
+                          ? "scale-125 border-white shadow-[0_0_14px_#ffffff] z-20"
+                          : "border-white/80 hover:scale-115 hover:shadow-[0_0_10px_rgba(255,255,255,0.4)]"
                       }`}
                       style={{ backgroundColor: site.color }}
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <span className="font-telemetry text-[9px] font-black text-slate-950 tracking-tighter select-none">
+                        {site.code}
+                      </span>
                     </div>
 
-                    {/* Site Tooltip Tag */}
+                    {/* Site Tooltip Tag - visible on hover or when selected to eliminate overlapping */}
                     <span
-                      className={`absolute left-6 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-0.5 font-telemetry text-[11px] font-bold shadow-md transition-all ${
+                      className={`pointer-events-none absolute left-7 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-0.5 font-telemetry text-[11px] font-bold shadow-xl transition-all z-30 ${
                         isSelected
-                          ? "bg-black/90 text-white border border-cyan-400"
-                          : "bg-black/70 text-slate-300 border border-white/10 group-hover:bg-black/90"
+                          ? "bg-[#0b0f19]/95 text-white border border-cyan-400 opacity-100 scale-100 shadow-[0_0_12px_rgba(0,240,255,0.3)]"
+                          : "bg-[#04060a]/90 text-slate-200 border border-white/20 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
                       }`}
                     >
-                      {site.name}
+                      {site.name} · {Math.abs(site.lat).toFixed(1)}°S
                     </span>
                   </button>
                 );

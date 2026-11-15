@@ -136,19 +136,19 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Photorealistic Interactive 3D Moon with Pinned Candidate Sites */}
+      {/* NASA Satellite Reconnaissance Console with Pinned Candidate Sites */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-telemetry text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">
-              INTERACTIVE LUNAR GLOBE &amp; RECONNAISSANCE
+              NASA SATELLITE RECONNAISSANCE &amp; MAPPING
             </p>
             <h3 className="font-hud text-lg tracking-wider text-slate-100">
-              REALISTIC 3D MOON · 6 GSFC SITES PINNED
+              AUTHENTIC LROC &amp; LOLA SATELLITE IMAGERY · 6 CANDIDATE POLAR SITES
             </h3>
           </div>
           <span className="hidden sm:inline-block rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 font-telemetry text-xs text-cyan-300">
-            DRAG TO ORBIT · TAP SITE TO FLY-TO
+            SELECT SITE · ASU QUICKMAP &amp; MOON TREK INTEGRATION
           </span>
         </div>
         <RealisticMoon3D />
