@@ -17,9 +17,9 @@ function getServerSnapshot(): "dark" | "light" {
   return "dark";
 }
 
-function applyThemeToDom(theme: "dark" | "light") {
-  document.documentElement.setAttribute("data-theme", theme);
-  if (theme === "light") {
+function applyThemeToDom(t: "dark" | "light") {
+  document.documentElement.setAttribute("data-theme", t);
+  if (t === "light") {
     document.documentElement.classList.add("light");
     document.documentElement.classList.remove("dark");
   } else {
@@ -28,35 +28,48 @@ function applyThemeToDom(theme: "dark" | "light") {
   }
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    localStorage.setItem("lunaredge-theme", next);
-    applyThemeToDom(next);
+  const selectTheme = (t: "dark" | "light") => {
+    localStorage.setItem("lunaredge-theme", t);
+    applyThemeToDom(t);
     window.dispatchEvent(new Event("storage"));
   };
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 font-telemetry text-xs transition-all shadow-sm ${
-        theme === "dark"
-          ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400"
-          : "border-slate-300 bg-white text-slate-800 hover:border-sky-500 hover:text-sky-600 shadow-md"
+    <div
+      className={`inline-flex items-center rounded-xl border border-white/10 bg-[#05070b] p-1 font-telemetry text-xs shadow-sm ${
+        className ?? ""
       }`}
-      title={
-        theme === "dark"
-          ? "Switch to NASA Cleanroom White Theme (Full Website)"
-          : "Switch to Deep Space Dark Theme"
-      }
     >
-      <span>{theme === "dark" ? "☀️" : "🌑"}</span>
-      <span className="font-hud text-[10px] tracking-wider">
-        {theme === "dark" ? "CLEANROOM WHITE" : "DEEP SPACE DARK"}
-      </span>
-    </button>
+      <button
+        type="button"
+        onClick={() => selectTheme("dark")}
+        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition ${
+          theme === "dark"
+            ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/50 shadow-sm"
+            : "text-slate-400 hover:text-white"
+        }`}
+        title="Deep Space Dark Theme"
+      >
+        <span>🌑</span>
+        <span className="font-hud text-[10px] tracking-wider">DARK</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => selectTheme("light")}
+        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition ${
+          theme === "light"
+            ? "bg-white text-slate-900 font-bold border border-slate-300 shadow-sm"
+            : "text-slate-400 hover:text-white"
+        }`}
+        title="NASA Cleanroom White Theme (Site-Wide)"
+      >
+        <span>☀️</span>
+        <span className="font-hud text-[10px] tracking-wider">CLEANROOM</span>
+      </button>
+    </div>
   );
 }

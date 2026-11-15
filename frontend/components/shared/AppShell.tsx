@@ -59,6 +59,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <SidebarNav onNavigate={() => setOpen(false)} />
+          <div className="mt-4 pt-3 border-t border-white/8">
+            <p className="font-hud text-[10px] tracking-wider text-slate-400 mb-2">THEME PREFERENCE</p>
+            <ThemeToggle className="w-full justify-center" />
+          </div>
           <SidebarMeta />
         </aside>
 
