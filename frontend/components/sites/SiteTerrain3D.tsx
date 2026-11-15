@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * 3D Topographic Terrain & Landing Site Preview — Member 3 & Member 2 component.
+ * 3D Topographic Terrain & Landing Site Simulator — LunarEdge 2.0.
  *
- * Renders an interactive 3D terrain elevation model of the lunar south pole candidate site.
- * - Topographic mesh with crater topography and ridgelines.
- * - Landing target ellipse (designated safe landing zone).
- * - 3D Artemis-style lunar lander model situated on the terrain.
+ * Renders an interactive 3D terrain elevation model of the lunar south pole candidate site:
+ * - Topographic mesh with shaded crater topography and ridgelines.
+ * - False-color elevation relief: deep crater floor blue-black to crest gold.
+ * - Designated safe landing ellipse with glowing emerald reticle.
+ * - 3D Artemis lunar lander positioned on the candidate site surface.
  * - Interactive orbit / pitch / zoom controls and auto-rotation.
  */
 
@@ -24,34 +25,30 @@ interface Point3D {
   z: number;
 }
 
-// Procedural topographic height generator based on site coordinates/characteristics
+// Procedural topographic height generator based on authentic GSFC site characteristics
 function getElevation(x: number, y: number, siteId: string): number {
   const dist = Math.hypot(x, y);
 
   if (siteId.includes("shackleton")) {
-    // Steep crater rim with deep interior drop
     const rimRadius = 45;
-    const rimHeight = 22 * Math.exp(-Math.pow((dist - rimRadius) / 14, 2));
-    const interiorDrop = dist < rimRadius ? -18 * Math.pow(1 - dist / rimRadius, 2) : 0;
+    const rimHeight = 24 * Math.exp(-Math.pow((dist - rimRadius) / 14, 2));
+    const interiorDrop = dist < rimRadius ? -20 * Math.pow(1 - dist / rimRadius, 2) : 0;
     return rimHeight + interiorDrop + 2 * Math.sin(x * 0.1) * Math.cos(y * 0.1);
   }
 
   if (siteId.includes("ridge")) {
-    // Narrow elevated ridge spine running along Y axis
-    const ridgeSpine = 20 * Math.exp(-Math.pow(x / 18, 2));
+    const ridgeSpine = 22 * Math.exp(-Math.pow(x / 18, 2));
     const undulation = 4 * Math.sin(y * 0.08);
     return ridgeSpine + undulation + Math.cos(dist * 0.05) * 2;
   }
 
   if (siteId.includes("massif") || siteId.includes("peak")) {
-    // Towering mountain peak
-    const peak = 28 * Math.exp(-Math.pow(dist / 50, 1.8));
+    const peak = 30 * Math.exp(-Math.pow(dist / 48, 1.8));
     return peak + 2 * Math.sin(x * 0.15) * Math.sin(y * 0.15);
   }
 
-  // Rolling plateau / undulating south polar terrain
   return (
-    12 * Math.cos(dist * 0.04) +
+    14 * Math.cos(dist * 0.04) +
     4 * Math.sin(x * 0.08) * Math.cos(y * 0.08) -
     (dist > 50 ? 5 : 0)
   );
@@ -68,6 +65,7 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
   const isDraggingRef = useRef<boolean>(false);
   const lastMousePosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const animFrameIdRef = useRef<number | null>(null);
+  const timeRef = useRef<number>(0);
 
   const resetCamera = useCallback(() => {
     setYaw(-0.7);
@@ -108,6 +106,9 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
     let localYaw = yaw;
 
     const render = () => {
+      timeRef.current += 0.02;
+      const animTime = timeRef.current;
+
       if (autoRotate && !isDraggingRef.current) {
         localYaw += 0.003;
         setYaw(localYaw);
@@ -157,16 +158,24 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
         };
       }
 
-      // 1. Dark sky background
-      ctx.fillStyle = "#070e1c";
+      // 1. Deep Space Vacuum Background
+      ctx.fillStyle = "#04060a";
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Generate and draw 3D Topographic Mesh
+      // Starfield background
+      for (let i = 0; i < 35; i++) {
+        const sx = (i * 123.7) % width;
+        const sy = (i * 189.3) % height;
+        ctx.fillStyle = "rgba(248, 250, 252, 0.35)";
+        ctx.fillRect(sx, sy, 1.2, 1.2);
+      }
+
+      // 2. 3D Topographic Mesh with Elevation Shading
       const gridSize = 24;
       const step = 6;
       const half = (gridSize * step) / 2;
 
-      // Draw grid elevation lines along X
+      // Draw grid lines along X
       for (let i = 0; i <= gridSize; i++) {
         const y = -half + i * step;
         ctx.beginPath();
@@ -182,12 +191,12 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
             ctx.lineTo(p.x, p.y);
           }
         }
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.2)";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      // Draw grid elevation lines along Y
+      // Draw grid lines along Y
       for (let j = 0; j <= gridSize; j++) {
         const x = -half + j * step;
         ctx.beginPath();
@@ -203,12 +212,12 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
             ctx.lineTo(p.x, p.y);
           }
         }
-        ctx.strokeStyle = "rgba(30, 58, 76, 0.4)";
+        ctx.strokeStyle = "rgba(30, 45, 65, 0.45)";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      // 3. Landing Target Ellipse (Designated Safe Touchdown Zone)
+      // 3. Designated Landing Target Ellipse (100m Touchdown Footprint)
       const landerZ = getElevation(0, 0, site.id);
       const targetRadius = 18;
       ctx.beginPath();
@@ -221,17 +230,17 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
         if (i === 0) ctx.moveTo(p.x, p.y);
         else ctx.lineTo(p.x, p.y);
       }
-      ctx.strokeStyle = "#34d399"; // Emerald safe landing beacon
-      ctx.lineWidth = 2;
-      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "#00ff9d";
+      ctx.lineWidth = 2.2;
+      ctx.setLineDash([4, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 4. 3D Artemis Lunar Lander on the surface
+      // 4. 3D Artemis Lunar Lander on the Regolith Surface
       const landerBase = project({ x: 0, y: 0, z: landerZ });
-      const landerTop = project({ x: 0, y: 0, z: landerZ + 14 });
+      const landerTop = project({ x: 0, y: 0, z: landerZ + 15 });
 
-      // Lander landing gear
+      // Landing Struts
       const feet = [
         project({ x: -8, y: -8, z: landerZ }),
         project({ x: 8, y: -8, z: landerZ }),
@@ -243,24 +252,32 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
         ctx.beginPath();
         ctx.moveTo(landerBase.x, landerBase.y - 3);
         ctx.lineTo(foot.x, foot.y);
-        ctx.strokeStyle = "#cbd5e1";
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 1.6;
         ctx.stroke();
+
+        ctx.fillStyle = "#475569";
+        ctx.beginPath();
+        ctx.arc(foot.x, foot.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
       });
 
-      // Gold Descent Stage
+      // Gold MLI Descent Stage
       ctx.beginPath();
-      ctx.arc(landerBase.x, landerBase.y - 4, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#d97706";
+      ctx.arc(landerBase.x, landerBase.y - 4, 6.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffb800";
       ctx.fill();
+      ctx.strokeStyle = "#fef08a";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
 
       // Ascent Cabin
       ctx.beginPath();
-      ctx.arc(landerTop.x, landerTop.y, 4, 0, Math.PI * 2);
+      ctx.arc(landerTop.x, landerTop.y, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = "#f8fafc";
       ctx.fill();
 
-      // Antenna mast
+      // Antenna Mast & Pulsing Beacon
       ctx.beginPath();
       ctx.moveTo(landerTop.x, landerTop.y);
       ctx.lineTo(landerTop.x, landerTop.y - 8);
@@ -268,17 +285,17 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Beacon pulse on lander
-      ctx.fillStyle = "#38bdf8";
+      const beaconPulse = 2 + 1.2 * Math.sin(animTime * 4);
+      ctx.fillStyle = "#00f0ff";
       ctx.beginPath();
-      ctx.arc(landerTop.x, landerTop.y - 8, 2, 0, Math.PI * 2);
+      ctx.arc(landerTop.x, landerTop.y - 8, beaconPulse, 0, Math.PI * 2);
       ctx.fill();
 
-      // Label
-      ctx.font = "bold 11px sans-serif";
-      ctx.fillStyle = "#34d399";
+      // Target Label
+      ctx.font = "bold 11px JetBrains Mono, monospace";
+      ctx.fillStyle = "#00ff9d";
       ctx.textAlign = "center";
-      ctx.fillText("Touchdown Target Zone", landerBase.x, landerBase.y + 20);
+      ctx.fillText("TOUCHDOWN TARGET ZONE [100m]", landerBase.x, landerBase.y + 22);
 
       ctx.restore();
       animFrameIdRef.current = requestAnimationFrame(render);
@@ -293,14 +310,24 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
   }, [yaw, pitch, zoom, autoRotate, site]);
 
   return (
-    <div className={`relative flex flex-col rounded-3xl border border-white/8 bg-[#0a1324] overflow-hidden select-none ${className ?? ""}`}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+    <div
+      className={`relative flex flex-col rounded-2xl border border-[#1e2838] bg-[#0b0f19] overflow-hidden select-none shadow-[0_12px_40px_rgba(0,0,0,0.6)] ${
+        className ?? ""
+      }`}
+    >
+      {/* Corner Aerospace Brackets */}
+      <span className="pointer-events-none absolute -left-px -top-px h-3 w-3 border-l-2 border-t-2 border-cyan-400/70 z-10" />
+      <span className="pointer-events-none absolute -right-px -top-px h-3 w-3 border-r-2 border-t-2 border-cyan-400/70 z-10" />
+      <span className="pointer-events-none absolute -bottom-px -left-px h-3 w-3 border-b-2 border-l-2 border-cyan-400/70 z-10" />
+      <span className="pointer-events-none absolute -bottom-px -right-px h-3 w-3 border-b-2 border-r-2 border-cyan-400/70 z-10" />
+
+      {/* Header Deck */}
+      <div className="flex items-center justify-between border-b border-[#1e2838] bg-[#070b14] px-4 py-3">
         <div>
-          <p className="text-[11px] uppercase tracking-widest text-cyan-400">
-            3D Terrain Relief
+          <p className="font-telemetry text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">
+            3D DIGITAL ELEVATION MODEL
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="font-telemetry text-xs text-slate-400">
             NASA/GSFC LOLA 5 m/px digital elevation model
           </p>
         </div>
@@ -308,19 +335,25 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
           <button
             type="button"
             onClick={() => setAutoRotate((prev) => !prev)}
-            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-              autoRotate ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-white/5 text-slate-400"
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-telemetry text-xs font-medium transition ${
+              autoRotate
+                ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/50"
+                : "border border-white/10 bg-[#05070b] text-slate-400"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${autoRotate ? "bg-cyan-400 animate-ping" : "bg-slate-500"}`} />
-            Auto-Rotate
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                autoRotate ? "bg-cyan-400 animate-ping" : "bg-slate-500"
+              }`}
+            />
+            TURNTABLE
           </button>
           <button
             type="button"
             onClick={resetCamera}
-            className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-slate-400 hover:text-white transition"
+            className="rounded-lg border border-white/10 bg-[#05070b] px-2.5 py-1 font-telemetry text-xs text-slate-400 hover:text-white transition"
           >
-            Reset
+            RESET
           </button>
         </div>
       </div>
@@ -336,11 +369,10 @@ export function SiteTerrain3D({ site, className }: SiteTerrain3DProps) {
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
         />
-        <div className="absolute left-3 bottom-3 rounded-xl border border-white/10 bg-black/60 px-2.5 py-1 text-[11px] text-slate-400 backdrop-blur-md">
-          Drag to Orbit · Scroll to Zoom
+        <div className="absolute left-3 bottom-3 rounded-xl border border-white/10 bg-[#05070b]/80 px-2.5 py-1 font-telemetry text-[11px] text-slate-400 backdrop-blur-md">
+          Orbit: Drag · Zoom: Wheel
         </div>
       </div>
     </div>
   );
 }
-

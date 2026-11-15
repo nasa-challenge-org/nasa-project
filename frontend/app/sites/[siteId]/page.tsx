@@ -19,16 +19,19 @@ function Field({
   label: string;
   value: string | number | null | undefined;
 }) {
-  const display =
-    value === null || value === undefined || value === ""
-      ? "N/A"
-      : String(value);
+  const isUnknown = value === null || value === undefined || value === "" || String(value).includes("N/A");
   return (
-    <div className="rounded-2xl border border-white/8 bg-[#0c1324] p-3">
-      <p className="text-[11px] uppercase tracking-wide text-slate-500">
+    <div className="rounded-xl border border-[#1e2838] bg-[#0b0f19] p-3 shadow-sm">
+      <p className="font-hud text-[11px] tracking-wider text-slate-400">
         {label}
       </p>
-      <p className="mt-1 break-all font-mono text-sm text-slate-100">{display}</p>
+      {isUnknown ? (
+        <span className="mt-1 inline-block rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-telemetry text-xs font-bold text-[#ff9100]">
+          N/A · UNVERIFIED
+        </span>
+      ) : (
+        <p className="mt-1 font-telemetry text-sm font-bold text-slate-100">{String(value)}</p>
+      )}
     </div>
   );
 }

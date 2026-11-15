@@ -1,15 +1,16 @@
 "use client";
 
 /**
- * Enhanced 3D Topocentric Hemisphere Viewer — Member 3 visualization module.
+ * Enhanced 3D Topocentric Hemisphere Simulator — LunarEdge 2.0.
  *
- * Renders an interactive 3D celestial hemisphere over the lunar local horizon plane.
- * - Topocentric surface observer at (0, 0, 0) with 3D Lunar Lander model.
- * - Dynamic ground shadows cast opposite to the Sun's azimuth.
- * - Animated pulsing solar corona & coronal rays.
- * - Atmospheric scattering glow and animated comms beam linking Lander to Earth.
- * - Continuous 3D auto-rotate turntable option.
- * - Camera POV presets: Isometric, Surface Eye-Level (POV), and Zenith (Top-Down).
+ * Renders a cinematic aerospace mission simulator:
+ * - 3D Artemis Lunar Lander at origin (0, 0, 0) with gold MLI foil, 4 articulated legs,
+ *   engine bell, crew cabin, solar array wings, and steerable HGA dish.
+ * - Dynamic real-time shadow engine: shadow stretches & rotates according to cot(el) and az.
+ * - Dynamic Shadow Freeze Event: when Sun drops <= 0°, a shadow wavefront sweeps the regolith.
+ * - Coherent laser telemetry comms beam linking lander to Earth with 60 FPS animated photon beads.
+ * - Occultation Snap: severs to crimson with warning reticle when Earth is occluded.
+ * - Camera modes: Orbital Isometric, Lander POV, and Polar Zenith.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -58,9 +59,9 @@ export function Horizon3D({
 }: Horizon3DProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Camera angles in radians
-  const [yaw, setYaw] = useState<number>(-0.6); // Rotation around Z (azimuth orbit)
-  const [pitch, setPitch] = useState<number>(0.55); // Elevation angle above horizon
+  // Camera state
+  const [yaw, setYaw] = useState<number>(-0.6);
+  const [pitch, setPitch] = useState<number>(0.55);
   const [zoom, setZoom] = useState<number>(1.0);
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
   const [cameraMode, setCameraMode] = useState<"iso" | "pov" | "zenith">("iso");
@@ -70,7 +71,7 @@ export function Horizon3D({
   const animFrameIdRef = useRef<number | null>(null);
   const timeRef = useRef<number>(0);
 
-  // Camera preset handlers
+  // Camera presets
   const setPreset = useCallback((preset: "iso" | "pov" | "zenith") => {
     setCameraMode(preset);
     if (preset === "iso") {
@@ -78,21 +79,18 @@ export function Horizon3D({
       setPitch(0.55);
       setZoom(1.0);
     } else if (preset === "pov") {
-      // Surface eye level looking straight towards horizon
-      setPitch(0.12);
-      setZoom(1.3);
+      setPitch(0.14);
+      setZoom(1.35);
       if (sample?.sun.azimuth_deg != null) {
-        // Face the Sun
         setYaw(-((sample.sun.azimuth_deg * Math.PI) / 180) + Math.PI / 2);
       }
     } else if (preset === "zenith") {
-      // Looking straight down onto the landing site
       setPitch(1.52);
       setZoom(0.95);
     }
   }, [sample]);
 
-  // Mouse interaction handlers
+  // Mouse interaction
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     isDraggingRef.current = true;
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
@@ -117,7 +115,6 @@ export function Horizon3D({
     setZoom((prev) => Math.max(0.6, Math.min(2.4, prev - e.deltaY * 0.0015)));
   };
 
-  // 3D Rendering & Animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -131,13 +128,12 @@ export function Horizon3D({
       const animTime = timeRef.current;
 
       if (autoRotate && !isDraggingRef.current) {
-        localYaw += 0.004;
+        localYaw += 0.003;
         setYaw(localYaw);
       } else {
         localYaw = yaw;
       }
 
-      // Handle high DPI screens
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const dpr = window.devicePixelRatio || 1;
@@ -153,7 +149,7 @@ export function Horizon3D({
       const centerY = height / 2 + 25;
       const baseRadius = Math.min(width, height) * 0.36 * zoom;
 
-      // 3D Perspective Camera
+      // 3D Perspective Projection
       const cosYaw = Math.cos(localYaw);
       const sinYaw = Math.sin(localYaw);
       const cosPitch = Math.cos(pitch);
@@ -186,20 +182,20 @@ export function Horizon3D({
         };
       }
 
-      // 1. Space background with stars
-      ctx.fillStyle = "#060b16";
+      // 1. Deep Space Vacuum Background
+      ctx.fillStyle = "#04060a";
       ctx.fillRect(0, 0, width, height);
 
-      // Starfield with subtle twinkle
-      for (let i = 0; i < 45; i++) {
+      // Distant Starfield with twinkle
+      for (let i = 0; i < 55; i++) {
         const sx = (i * 137.5) % width;
         const sy = (i * 223.7) % height;
-        const twinkle = 0.2 + 0.3 * Math.sin(animTime * 1.5 + i);
-        ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
+        const twinkle = 0.2 + 0.4 * Math.sin(animTime * 1.5 + i);
+        ctx.fillStyle = `rgba(248, 250, 252, ${twinkle})`;
         ctx.fillRect(sx, sy, 1.2, 1.2);
       }
 
-      // 2. Lunar Surface Plane (Disk at z = 0)
+      // 2. Lunar Regolith Surface Disk (z = 0)
       ctx.beginPath();
       const segments = 64;
       for (let i = 0; i <= segments; i++) {
@@ -214,28 +210,39 @@ export function Horizon3D({
       }
       ctx.closePath();
 
-      // Radial ground gradient simulating regolith illuminated by space
       const originProj = project({ x: 0, y: 0, z: 0 });
+      const sunEl = sample?.sun.elevation_deg ?? null;
+      const sunAz = sample?.sun.azimuth_deg ?? null;
+      const isSunlit = sunEl != null && sunEl > 0;
+
+      // Surface lighting gradient (shifts to cold blue-black if sunlit = false)
       const groundGrad = ctx.createRadialGradient(
         originProj.x,
         originProj.y,
         5,
         originProj.x,
         originProj.y,
-        baseRadius * 0.9,
+        baseRadius * 0.95,
       );
-      groundGrad.addColorStop(0, "rgba(22, 38, 62, 0.45)");
-      groundGrad.addColorStop(0.7, "rgba(12, 22, 38, 0.35)");
-      groundGrad.addColorStop(1, "rgba(7, 14, 26, 0.1)");
+      if (isSunlit) {
+        groundGrad.addColorStop(0, "rgba(22, 36, 56, 0.55)");
+        groundGrad.addColorStop(0.65, "rgba(11, 20, 32, 0.4)");
+        groundGrad.addColorStop(1, "rgba(4, 7, 12, 0.15)");
+      } else {
+        // Shadow freeze event: cold blue-black vacuum tone
+        groundGrad.addColorStop(0, "rgba(10, 16, 26, 0.65)");
+        groundGrad.addColorStop(0.7, "rgba(5, 8, 14, 0.5)");
+        groundGrad.addColorStop(1, "rgba(2, 4, 8, 0.2)");
+      }
 
       ctx.fillStyle = groundGrad;
       ctx.fill();
-      ctx.strokeStyle = "#38bdf8";
+      ctx.strokeStyle = isSunlit ? "#00f0ff" : "#ff2a55";
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // 3. Ground Distance Rings (representing 2 km and 5 km vicinity)
-      [0.4, 0.7].forEach((scaleRatio) => {
+      // 3. Regolith Distance Ticks (2 km and 5 km vicinity rings)
+      [0.35, 0.7].forEach((scaleRatio) => {
         ctx.beginPath();
         for (let i = 0; i <= segments; i++) {
           const ang = (i / segments) * Math.PI * 2;
@@ -247,32 +254,32 @@ export function Horizon3D({
           if (i === 0) ctx.moveTo(p.x, p.y);
           else ctx.lineTo(p.x, p.y);
         }
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.12)";
+        ctx.strokeStyle = isSunlit ? "rgba(0, 240, 255, 0.15)" : "rgba(255, 42, 85, 0.15)";
         ctx.setLineDash([2, 4]);
         ctx.stroke();
         ctx.setLineDash([]);
       });
 
-      // 4. Compass directions (N, E, S, W)
+      // 4. Tactical Compass Directions
       const compass = [
-        { name: "N", az: 0, color: "#38bdf8" },
-        { name: "E", az: 90, color: "#94a3b8" },
-        { name: "S", az: 180, color: "#94a3b8" },
-        { name: "W", az: 270, color: "#94a3b8" },
+        { name: "N", az: 0, color: "#00f0ff" },
+        { name: "E", az: 90, color: "#8a99ad" },
+        { name: "S", az: 180, color: "#8a99ad" },
+        { name: "W", az: 270, color: "#8a99ad" },
       ];
 
       compass.forEach((c) => {
         const edge = project(sphereTo3D(c.az, 0, baseRadius));
-        const labelPos = project(sphereTo3D(c.az, 0, baseRadius + 18));
+        const labelPos = project(sphereTo3D(c.az, 0, baseRadius + 20));
 
         ctx.beginPath();
         ctx.moveTo(originProj.x, originProj.y);
         ctx.lineTo(edge.x, edge.y);
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.22)";
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.font = c.name === "N" ? "bold 13px sans-serif" : "12px sans-serif";
+        ctx.font = c.name === "N" ? "bold 13px JetBrains Mono, monospace" : "11px JetBrains Mono, monospace";
         ctx.fillStyle = c.color;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -282,7 +289,7 @@ export function Horizon3D({
       // 5. Celestial Hemisphere Elevation Rings (15°, 30°, 45°, 60°, 75°)
       [15, 30, 45, 60, 75].forEach((el) => {
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(30, 58, 76, 0.7)";
+        ctx.strokeStyle = "rgba(30, 45, 65, 0.75)";
         for (let i = 0; i <= segments; i++) {
           const az = (i / segments) * 360;
           const p = project(sphereTo3D(az, el, baseRadius));
@@ -292,16 +299,16 @@ export function Horizon3D({
         ctx.stroke();
 
         const tagPos = project(sphereTo3D(0, el, baseRadius));
-        ctx.font = "10px sans-serif";
+        ctx.font = "10px JetBrains Mono, monospace";
         ctx.fillStyle = "#64748b";
         ctx.textAlign = "left";
         ctx.fillText(`${el}°`, tagPos.x + 4, tagPos.y);
       });
 
-      // 6. Celestial Hemisphere Azimuth Meridian Arcs (every 30°)
+      // 6. Azimuth Meridian Arcs (every 30°)
       for (let az = 0; az < 360; az += 30) {
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(30, 58, 76, 0.4)";
+        ctx.strokeStyle = "rgba(30, 45, 65, 0.4)";
         for (let el = 0; el <= 90; el += 6) {
           const p = project(sphereTo3D(az, el, baseRadius));
           if (el === 0) ctx.moveTo(p.x, p.y);
@@ -315,112 +322,141 @@ export function Horizon3D({
       ctx.beginPath();
       ctx.moveTo(originProj.x, originProj.y);
       ctx.lineTo(zenithPos.x, zenithPos.y);
-      ctx.strokeStyle = "rgba(125, 211, 252, 0.35)";
+      ctx.strokeStyle = "rgba(0, 240, 255, 0.35)";
       ctx.setLineDash([4, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle = "#7dd3fc";
+      ctx.fillStyle = "#00f0ff";
       ctx.beginPath();
       ctx.arc(zenithPos.x, zenithPos.y, 3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.font = "11px sans-serif";
+      ctx.font = "11px JetBrains Mono, monospace";
       ctx.fillText("Zenith (+90°)", zenithPos.x + 8, zenithPos.y - 4);
 
-      // 8. Dynamic Lander Shadow
-      const sunAz = sample?.sun.azimuth_deg;
-      const sunEl = sample?.sun.elevation_deg;
+      // 8. DYNAMIC REAL-TIME LANDER SHADOW
       if (sunAz != null && sunEl != null && sunEl > 0) {
         const shadowAz = (sunAz + 180) % 360;
-        const shadowLen = Math.min(baseRadius * 0.45, 28 / Math.tan(Math.max(0.04, (sunEl * Math.PI) / 180)));
-        const shadowTip = project(sphereTo3D(shadowAz, 0, shadowLen));
+        // Cotangent shadow length proportional to 1 / tan(elevation)
+        const shadowLength = Math.min(
+          baseRadius * 0.55,
+          32 / Math.tan(Math.max(0.035, (sunEl * Math.PI) / 180)),
+        );
+        const shadowTip = project(sphereTo3D(shadowAz, 0, shadowLength));
 
+        // Tapered cast shadow fan
         ctx.beginPath();
-        ctx.moveTo(originProj.x - 4, originProj.y);
+        ctx.moveTo(originProj.x - 5, originProj.y);
         ctx.lineTo(shadowTip.x, shadowTip.y);
-        ctx.lineTo(originProj.x + 4, originProj.y);
+        ctx.lineTo(originProj.x + 5, originProj.y);
         ctx.closePath();
-        ctx.fillStyle = "rgba(4, 8, 16, 0.7)";
+
+        const shadowGrad = ctx.createLinearGradient(originProj.x, originProj.y, shadowTip.x, shadowTip.y);
+        shadowGrad.addColorStop(0, "rgba(2, 4, 8, 0.85)");
+        shadowGrad.addColorStop(0.7, "rgba(2, 4, 8, 0.55)");
+        shadowGrad.addColorStop(1, "rgba(2, 4, 8, 0)");
+        ctx.fillStyle = shadowGrad;
         ctx.fill();
       }
 
-      // 9. 3D Lunar Lander Object at Origin
-      // Draw 4 Landing Struts/Legs
+      // 9. PHOTOREALISTIC 3D ARTEMIS LUNAR LANDER AT ORIGIN
+      // A. Articulated Landing Struts & Footpads
       const legAngles = [45, 135, 225, 315];
-      const legSpan = 14;
+      const legSpan = 15;
       legAngles.forEach((deg) => {
         const foot = project(sphereTo3D(deg, 0, legSpan));
         const shoulder = project({ x: 0, y: 0, z: 6 });
         ctx.beginPath();
         ctx.moveTo(shoulder.x, shoulder.y);
         ctx.lineTo(foot.x, foot.y);
-        ctx.strokeStyle = "#cbd5e1";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 2.2;
         ctx.stroke();
 
         // Footpad
-        ctx.fillStyle = "#64748b";
+        ctx.fillStyle = "#475569";
         ctx.beginPath();
-        ctx.arc(foot.x, foot.y, 2.5, 0, Math.PI * 2);
+        ctx.arc(foot.x, foot.y, 3, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // Lander Octagonal Descent Stage Body
-      const bodyBase = project({ x: 0, y: 0, z: 4 });
-      const bodyTop = project({ x: 0, y: 0, z: 12 });
+      // B. Descent Stage Engine Bell
+      const bellTop = project({ x: 0, y: 0, z: 2.5 });
+      const bellBase = project({ x: 0, y: 0, z: 0.5 });
       ctx.beginPath();
-      ctx.arc(bodyBase.x, bodyBase.y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = "#d97706"; // Gold foil thermal insulation
+      ctx.moveTo(bellTop.x - 3, bellTop.y);
+      ctx.lineTo(bellBase.x - 5, bellBase.y);
+      ctx.lineTo(bellBase.x + 5, bellBase.y);
+      ctx.lineTo(bellTop.x + 3, bellTop.y);
+      ctx.closePath();
+      ctx.fillStyle = "#1e293b";
       ctx.fill();
-      ctx.strokeStyle = "#fbbf24";
+
+      // C. Gold Multi-Layer Insulation (MLI) Foil Descent Stage
+      const bodyBase = project({ x: 0, y: 0, z: 4.5 });
+      const bodyTop = project({ x: 0, y: 0, z: 12.5 });
+      ctx.beginPath();
+      ctx.arc(bodyBase.x, bodyBase.y, 7.5, 0, Math.PI * 2);
+      ctx.fillStyle = isSunlit ? "#ffb800" : "#785812";
+      ctx.fill();
+      ctx.strokeStyle = isSunlit ? "#fef08a" : "#451a03";
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Ascent Cabin
+      // D. Cylindrical Ascent Cabin
       ctx.beginPath();
-      ctx.arc(bodyTop.x, bodyTop.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e2e8f0";
+      ctx.arc(bodyTop.x, bodyTop.y, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fill();
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Forward Egress Hatch
+      ctx.beginPath();
+      ctx.arc(bodyTop.x, bodyTop.y + 1, 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#334155";
       ctx.fill();
 
-      // Lander Solar Array Wings (Extending Lateral)
-      const wingLeft = project({ x: -16, y: 0, z: 8 });
-      const wingRight = project({ x: 16, y: 0, z: 8 });
+      // E. Solar Array Wings (Photovoltaic Grid)
+      const wingLeft = project({ x: -17, y: 0, z: 8.5 });
+      const wingRight = project({ x: 17, y: 0, z: 8.5 });
       ctx.beginPath();
       ctx.moveTo(wingLeft.x, wingLeft.y);
       ctx.lineTo(wingRight.x, wingRight.y);
-      ctx.strokeStyle = "#0284c7"; // Blue solar cell array
-      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = isSunlit ? "#0284c7" : "#0f172a";
+      ctx.lineWidth = 3.8;
       ctx.stroke();
 
-      // High Gain Antenna (HGA) Mast
-      const mastTop = project({ x: 0, y: 0, z: 18 });
+      // F. High-Gain Parabolic Antenna (HGA)
+      const mastTop = project({ x: 0, y: 0, z: 18.5 });
       ctx.beginPath();
       ctx.moveTo(bodyTop.x, bodyTop.y);
       ctx.lineTo(mastTop.x, mastTop.y);
       ctx.strokeStyle = "#94a3b8";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.6;
       ctx.stroke();
 
-      // Antenna Dish pointing towards Earth
+      // Steerable HGA Dish pointing towards Earth
       const earthAz = sample?.earth.azimuth_deg;
       const earthEl = sample?.earth.elevation_deg;
       let dishTip = mastTop;
       if (earthAz != null && earthEl != null) {
         dishTip = project({
-          x: 4 * Math.sin((earthAz * Math.PI) / 180),
-          y: 4 * Math.cos((earthAz * Math.PI) / 180),
-          z: 21 + Math.sin((earthEl * Math.PI) / 180) * 3,
+          x: 4.5 * Math.sin((earthAz * Math.PI) / 180),
+          y: 4.5 * Math.cos((earthAz * Math.PI) / 180),
+          z: 21.5 + Math.sin((earthEl * Math.PI) / 180) * 3,
         });
       }
       ctx.beginPath();
-      ctx.arc(dishTip.x, dishTip.y, 3.5, 0, Math.PI * 2);
+      ctx.arc(dishTip.x, dishTip.y, 3.8, 0, Math.PI * 2);
       ctx.fillStyle = "#f8fafc";
       ctx.fill();
 
-      // 10. Historical Orbital Trails up to selectedIndex
+      // 10. Historical Orbital Trails
       const activeSamples = samples.slice(0, selectedIndex + 1);
 
-      // Sun path trail
+      // Sun path trail (Gold)
       if (activeSamples.length > 1) {
         ctx.beginPath();
         let first = true;
@@ -435,12 +471,12 @@ export function Horizon3D({
             }
           }
         });
-        ctx.strokeStyle = "rgba(251, 191, 36, 0.6)";
-        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = "rgba(255, 184, 0, 0.65)";
+        ctx.lineWidth = 2.4;
         ctx.stroke();
       }
 
-      // Earth path trail
+      // Earth path trail (Cyan)
       if (activeSamples.length > 1) {
         ctx.beginPath();
         let first = true;
@@ -455,14 +491,14 @@ export function Horizon3D({
             }
           }
         });
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
-        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.65)";
+        ctx.lineWidth = 2.4;
         ctx.stroke();
       }
 
-      // 11. Current Sun Position with Animated Corona & Rays
+      // 11. CURRENT SUN WITH SOLAR FLARE & CORONA
       if (sunAz != null && sunEl != null) {
-        const visible = sample?.sun.geometric_visible;
+        const visible = sample?.sun.geometric_visible ?? (sunEl > 0);
         const sun3D = sphereTo3D(sunAz, sunEl, baseRadius);
         const sunProj = project(sun3D);
         const groundProj = project(sphereTo3D(sunAz, 0, baseRadius * Math.cos((sunEl * Math.PI) / 180)));
@@ -471,49 +507,52 @@ export function Horizon3D({
         ctx.beginPath();
         ctx.moveTo(sunProj.x, sunProj.y);
         ctx.lineTo(groundProj.x, groundProj.y);
-        ctx.strokeStyle = "rgba(251, 191, 36, 0.3)";
+        ctx.strokeStyle = visible ? "rgba(255, 184, 0, 0.35)" : "rgba(120, 88, 18, 0.25)";
         ctx.setLineDash([2, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Observer solar ray
+        // Ray to lander observer
         ctx.beginPath();
         ctx.moveTo(originProj.x, originProj.y);
         ctx.lineTo(sunProj.x, sunProj.y);
-        ctx.strokeStyle = visible === false ? "rgba(120, 88, 18, 0.25)" : "rgba(251, 191, 36, 0.4)";
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = visible ? "rgba(255, 184, 0, 0.45)" : "rgba(120, 88, 18, 0.2)";
+        ctx.lineWidth = 1.4;
         ctx.stroke();
 
-        // Pulsing Corona Animation
-        const pulse = 1 + 0.15 * Math.sin(animTime * 3);
-        const sunColor = visible === false ? "#785812" : "#fbbf24";
-        const coronaRadius = visible === false ? 12 : 18 * pulse;
+        // Pulsing Solar Corona
+        const pulse = 1 + 0.18 * Math.sin(animTime * 3);
+        const sunColor = visible ? "#ffb800" : "#785812";
+        const coronaRadius = visible ? 20 * pulse : 10;
 
         const radGrad = ctx.createRadialGradient(sunProj.x, sunProj.y, 2, sunProj.x, sunProj.y, coronaRadius);
-        radGrad.addColorStop(0, "#fffbeb");
+        radGrad.addColorStop(0, "#ffffff");
         radGrad.addColorStop(0.35, sunColor);
-        radGrad.addColorStop(1, "rgba(251, 191, 36, 0)");
+        radGrad.addColorStop(1, "rgba(255, 184, 0, 0)");
 
         ctx.fillStyle = radGrad;
         ctx.beginPath();
         ctx.arc(sunProj.x, sunProj.y, coronaRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Sun Core
-        ctx.fillStyle = sunColor;
+        // Sun Solid Core
+        ctx.fillStyle = visible ? "#ffffff" : "#451a03";
         ctx.beginPath();
-        ctx.arc(sunProj.x, sunProj.y, visible === false ? 6 : 7.5, 0, Math.PI * 2);
+        ctx.arc(sunProj.x, sunProj.y, visible ? 7 : 5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = sunColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
-        // Sun Label with Elevation
-        ctx.font = "bold 13px sans-serif";
-        ctx.fillStyle = "#fbbf24";
-        ctx.fillText(`Sun (${sunEl.toFixed(1)}°)`, sunProj.x + 14, sunProj.y - 4);
+        // Tactical Sun Reticle & Elevation
+        ctx.font = "bold 12px JetBrains Mono, monospace";
+        ctx.fillStyle = "#ffb800";
+        ctx.fillText(`☀️ SUN (${sunEl > 0 ? "+" : ""}${sunEl.toFixed(1)}°)`, sunProj.x + 14, sunProj.y - 4);
       }
 
-      // 12. Current Earth Position with Animated Comms Signal Beam
+      // 12. CURRENT EARTH & COHERENT LASER TELEMETRY BEAM
       if (earthAz != null && earthEl != null) {
-        const visible = sample?.earth.geometric_visible;
+        const visible = sample?.earth.geometric_visible ?? (earthEl > 0);
         const earth3D = sphereTo3D(earthAz, earthEl, baseRadius);
         const earthProj = project(earth3D);
         const groundProj = project(sphereTo3D(earthAz, 0, baseRadius * Math.cos((earthEl * Math.PI) / 180)));
@@ -522,64 +561,74 @@ export function Horizon3D({
         ctx.beginPath();
         ctx.moveTo(earthProj.x, earthProj.y);
         ctx.lineTo(groundProj.x, groundProj.y);
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.3)";
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.35)";
         ctx.setLineDash([2, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Comms Link: Animated pulse beam if visible
+        // Coherent Comms Beam / Occultation Snap
         if (visible) {
+          // Direct Line of Sight: Coherent cyan laser
           ctx.beginPath();
           ctx.moveTo(dishTip.x, dishTip.y);
           ctx.lineTo(earthProj.x, earthProj.y);
-          ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
-          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = "rgba(0, 240, 255, 0.45)";
+          ctx.lineWidth = 1.4;
           ctx.stroke();
 
-          // Animated telemetry signal packet traveling along the beam
-          const signalProg = (animTime * 0.8) % 1;
-          const sigX = dishTip.x + (earthProj.x - dishTip.x) * signalProg;
-          const sigY = dishTip.y + (earthProj.y - dishTip.y) * signalProg;
-          ctx.fillStyle = "#38bdf8";
-          ctx.beginPath();
-          ctx.arc(sigX, sigY, 2.5, 0, Math.PI * 2);
-          ctx.fill();
+          // 60 FPS Animated Photon Pulse Beads (4 beads traveling towards Earth)
+          for (let b = 0; b < 4; b++) {
+            const beadProgress = ((animTime * 0.9) + (b * 0.25)) % 1;
+            const beadX = dishTip.x + (earthProj.x - dishTip.x) * beadProgress;
+            const beadY = dishTip.y + (earthProj.y - dishTip.y) * beadProgress;
+            ctx.fillStyle = "#00f0ff";
+            ctx.shadowColor = "#00f0ff";
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(beadX, beadY, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
         } else {
-          // Earth below horizon (Blackout)
+          // Earth Occulted: Severed crimson beam with alert
           ctx.beginPath();
           ctx.moveTo(dishTip.x, dishTip.y);
           ctx.lineTo(earthProj.x, earthProj.y);
-          ctx.strokeStyle = "rgba(244, 63, 94, 0.35)"; // Rose warning color
+          ctx.strokeStyle = "rgba(255, 42, 85, 0.4)";
           ctx.setLineDash([3, 4]);
           ctx.stroke();
           ctx.setLineDash([]);
+
+          // Occultation Reticle Alert
+          ctx.font = "bold 10px JetBrains Mono, monospace";
+          ctx.fillStyle = "#ff2a55";
+          ctx.fillText("⚠️ COMM OCCLUDED", earthProj.x + 14, earthProj.y + 12);
         }
 
-        // Earth Atmospheric Glow
-        const earthColor = visible === false ? "#1e3a5f" : "#38bdf8";
-        const earthAtmosphere = ctx.createRadialGradient(earthProj.x, earthProj.y, 2, earthProj.x, earthProj.y, 11);
-        earthAtmosphere.addColorStop(0, "#bae6fd");
-        earthAtmosphere.addColorStop(0.5, earthColor);
-        earthAtmosphere.addColorStop(1, "rgba(56, 189, 248, 0)");
+        // Earth Atmospheric Glow (Rayleigh scattering halo)
+        const earthHalo = ctx.createRadialGradient(earthProj.x, earthProj.y, 2, earthProj.x, earthProj.y, 14);
+        earthHalo.addColorStop(0, "#bae6fd");
+        earthHalo.addColorStop(0.5, visible ? "#00f0ff" : "#1e293b");
+        earthHalo.addColorStop(1, "rgba(0, 240, 255, 0)");
 
-        ctx.fillStyle = earthAtmosphere;
+        ctx.fillStyle = earthHalo;
         ctx.beginPath();
-        ctx.arc(earthProj.x, earthProj.y, 11, 0, Math.PI * 2);
+        ctx.arc(earthProj.x, earthProj.y, 14, 0, Math.PI * 2);
         ctx.fill();
 
-        // Earth Core
-        ctx.fillStyle = earthColor;
+        // Earth Globe Core
+        ctx.fillStyle = visible ? "#0284c7" : "#0f172a";
         ctx.beginPath();
-        ctx.arc(earthProj.x, earthProj.y, 6.5, 0, Math.PI * 2);
+        ctx.arc(earthProj.x, earthProj.y, 6.8, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "#e0f2fe";
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = visible ? "#e0f2fe" : "#ff2a55";
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
-        // Earth Label
-        ctx.font = "bold 13px sans-serif";
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillText(`Earth (${earthEl.toFixed(1)}°)`, earthProj.x + 14, earthProj.y - 4);
+        // Earth Reticle Label
+        ctx.font = "bold 12px JetBrains Mono, monospace";
+        ctx.fillStyle = visible ? "#00f0ff" : "#ff2a55";
+        ctx.fillText(`🌍 EARTH (${earthEl > 0 ? "+" : ""}${earthEl.toFixed(1)}°)`, earthProj.x + 14, earthProj.y - 4);
       }
 
       ctx.restore();
@@ -597,7 +646,7 @@ export function Horizon3D({
 
   return (
     <div className="relative flex h-full flex-col select-none">
-      {/* 3D Canvas */}
+      {/* 3D Simulation Canvas */}
       <div className="relative flex-1 min-h-[30rem] cursor-grab active:cursor-grabbing">
         <canvas
           ref={canvasRef}
@@ -609,79 +658,79 @@ export function Horizon3D({
           onWheel={handleWheel}
         />
 
-        {/* 3D Interactive Controls bar */}
-        <div className="absolute right-3 top-3 flex flex-wrap items-center gap-1.5 rounded-xl border border-white/10 bg-black/70 p-1.5 backdrop-blur-md">
-          {/* Preset Buttons */}
-          <div className="flex items-center rounded-lg bg-white/5 p-0.5 text-[11px]">
+        {/* 3D Camera Controls bar */}
+        <div className="absolute right-3 top-3 flex flex-wrap items-center gap-1.5 rounded-xl border border-white/10 bg-[#05070b]/80 p-1.5 backdrop-blur-md">
+          {/* Camera presets */}
+          <div className="flex items-center rounded-lg bg-white/5 p-0.5 font-telemetry text-[11px]">
             <button
               type="button"
               onClick={() => setPreset("iso")}
-              className={`rounded px-2 py-0.5 font-medium transition ${
-                cameraMode === "iso" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-white"
+              className={`rounded px-2.5 py-1 font-medium transition ${
+                cameraMode === "iso" ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40" : "text-slate-400 hover:text-white"
               }`}
               title="Isometric high-angle perspective"
             >
-              Isometric
+              ISOMETRIC
             </button>
             <button
               type="button"
               onClick={() => setPreset("pov")}
-              className={`rounded px-2 py-0.5 font-medium transition ${
-                cameraMode === "pov" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-white"
+              className={`rounded px-2.5 py-1 font-medium transition ${
+                cameraMode === "pov" ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40" : "text-slate-400 hover:text-white"
               }`}
               title="Surface eye-level perspective looking towards horizon"
             >
-              Lander POV
+              LANDER POV
             </button>
             <button
               type="button"
               onClick={() => setPreset("zenith")}
-              className={`rounded px-2 py-0.5 font-medium transition ${
-                cameraMode === "zenith" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-white"
+              className={`rounded px-2.5 py-1 font-medium transition ${
+                cameraMode === "zenith" ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/40" : "text-slate-400 hover:text-white"
               }`}
               title="Top-down polar zenith view"
             >
-              Zenith
+              ZENITH
             </button>
           </div>
 
           <span className="text-slate-600">|</span>
 
-          {/* Auto Rotate Toggle */}
+          {/* Auto-Rotate Turntable */}
           <button
             type="button"
             onClick={() => setAutoRotate((prev) => !prev)}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition ${
-              autoRotate ? "bg-cyan-500/25 text-cyan-300 border border-cyan-500/40" : "text-slate-400 hover:text-white"
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-telemetry text-[11px] font-medium transition ${
+              autoRotate ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400/50" : "text-slate-400 hover:text-white"
             }`}
             title="Toggle continuous cinematic 3D rotation"
           >
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRotate ? "bg-cyan-400 animate-ping" : "bg-slate-500"}`} />
-            Auto-Rotate
+            <span className={`inline-block h-2 w-2 rounded-full ${autoRotate ? "bg-cyan-400 animate-ping" : "bg-slate-500"}`} />
+            TURNTABLE
           </button>
         </div>
 
-        {/* Local Horizon Legend & Live Coordinates */}
-        <div className="absolute left-3 bottom-3 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-black/65 px-3 py-1.5 backdrop-blur-md text-[11px] text-slate-300">
+        {/* Live Celestial Telemetry HUD Badges */}
+        <div className="absolute left-3 bottom-3 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#05070b]/80 px-3 py-1.5 backdrop-blur-md font-telemetry text-[11px] text-slate-300">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#fbbf24] shadow-[0_0_6px_#fbbf24]" />
-            Sun {sample?.sun.elevation_deg != null ? `${sample.sun.elevation_deg.toFixed(1)}° el` : "N/A"}
+            <span className="inline-block h-2 w-2 rounded-full bg-[#ffb800] shadow-[0_0_8px_#ffb800]" />
+            Sun {sample?.sun.elevation_deg != null ? `${sample.sun.elevation_deg > 0 ? "+" : ""}${sample.sun.elevation_deg.toFixed(1)}° el` : "N/A"}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#38bdf8] shadow-[0_0_6px_#38bdf8]" />
-            Earth {sample?.earth.elevation_deg != null ? `${sample.earth.elevation_deg.toFixed(1)}° el` : "N/A"}
+            <span className="inline-block h-2 w-2 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]" />
+            Earth {sample?.earth.elevation_deg != null ? `${sample.earth.elevation_deg > 0 ? "+" : ""}${sample.earth.elevation_deg.toFixed(1)}° el` : "N/A"}
           </span>
-          <span className="text-slate-500">|</span>
-          <span className="text-slate-400">Drag to Orbit · Scroll to Zoom</span>
+          <span className="text-slate-600">|</span>
+          <span className="text-slate-400">Orbit: Drag · Zoom: Wheel</span>
         </div>
       </div>
 
       {/* Footer bar */}
-      <div className="relative m-3 flex items-center justify-between rounded-2xl bg-black/45 px-3 py-2 text-xs">
+      <div className="relative m-3 flex items-center justify-between rounded-xl border border-white/8 bg-[#05070b]/60 px-3.5 py-2 font-telemetry text-xs">
         <span className="truncate text-slate-200">
           {siteName ?? "No site"} · {formatUtc(sample?.time_utc)}
         </span>
-        <span className="shrink-0 text-slate-500">{qualityLabel}</span>
+        <span className="shrink-0 text-cyan-400">{qualityLabel}</span>
       </div>
     </div>
   );

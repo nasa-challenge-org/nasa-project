@@ -60,8 +60,21 @@ export default function ComparePage() {
 
   useEffect(() => {
     getSites()
-      .then(setSites)
+      .then((data) => {
+        setSites(data);
+        setLoading(true);
+        postCompare({
+          scenarios: [
+            scenarioPayload(siteA, "A", startUtc, durationHours, stepMinutes, includeTerrain),
+            scenarioPayload(siteB, "B", startUtc, durationHours, stepMinutes, includeTerrain),
+          ],
+        })
+          .then(setResult)
+          .catch(() => {})
+          .finally(() => setLoading(false));
+      })
       .catch((err: Error) => setError(err.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const duplicate =

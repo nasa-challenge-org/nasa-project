@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ElevationChart } from "@/components/charts/ElevationChart";
 import { VisibilityBands } from "@/components/charts/VisibilityBands";
@@ -8,6 +8,7 @@ import { VisibilityLegend } from "@/components/charts/VisibilityLegend";
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { MetricStatCard } from "@/components/dashboard/MetricStatCard";
 import { SiteChips } from "@/components/dashboard/SiteChips";
+import { MissionAnnunciator } from "@/components/dashboard/MissionAnnunciator";
 import { PageIntro } from "@/components/shared/PageIntro";
 import { EmptyPanel } from "@/components/shared/EmptyPanel";
 import { OperationalWindows } from "@/components/dashboard/OperationalWindows";
@@ -52,6 +53,7 @@ function DashboardScreen() {
   const [sitesError, setSitesError] = useState<string | null>(null);
   const [sampleIndex, setSampleIndex] = useState(0);
   const [querySite, setQuerySite] = useState(requestedSite);
+  const initialRunRef = useRef(false);
 
   if (requestedSite !== querySite) {
     setQuerySite(requestedSite);
@@ -65,10 +67,33 @@ function DashboardScreen() {
       .then((rows) => {
         setSites(rows);
         const preferred = requestedSite ?? siteId;
-        if (rows.some((row) => row.id === preferred)) {
-          setSiteId(preferred);
-        } else if (rows[0]) {
-          setSiteId(rows[0].id);
+        const targetId = rows.some((row) => row.id === preferred) ? preferred : (rows[0]?.id ?? "connecting-ridge");
+        setSiteId(targetId);
+
+        if (!initialRunRef.current) {
+          initialRunRef.current = true;
+          setLoading(true);
+          postAnalysis({
+            site_id: targetId,
+            observer: null,
+            time: {
+              start_utc: utcIsoFromDatetimeLocal(startUtc),
+              duration_hours: durationHours,
+              step_minutes: stepMinutes as 5 | 10 | 15 | 30 | 60,
+            },
+            options: {
+              include_terrain: includeTerrain,
+              earth_visibility_mode: "center",
+              solar_array_tilt_deg: 0,
+              custom_observer: false,
+            },
+          })
+            .then((res) => {
+              setResult(res);
+              setSampleIndex(0);
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
         }
       })
       .catch((err: Error) => setSitesError(err.message));
@@ -191,6 +216,17 @@ function DashboardScreen() {
           onSelect={(id) => setSiteId(id)}
         />
       )}
+
+      {sample ? (
+        <MissionAnnunciator
+          sample={sample}
+          site={catalogue.find((s) => s.id === siteId) ?? null}
+          siteName={horizonSiteName}
+          sampleIndex={sampleIndex}
+          totalSamples={samples.length}
+          onStepIndex={setSampleIndex}
+        />
+      ) : null}
 
       <div className="grid items-stretch gap-4 lg:grid-cols-2">
         {loading && !result ? (
