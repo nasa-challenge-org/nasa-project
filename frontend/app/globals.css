@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="dark"],
+.dark {
   --background: #05070b;
   --foreground: #f8fafc;
   --panel: #0b0f19;
@@ -8,13 +10,31 @@
   --panel-active-border: #38bdf8;
   --well: #020408;
 
-  /* High-Lux Mission Chromas */
+  /* High-Lux Mission Chromas (Dark Theme) */
   --solar-gold: #ffb800;
   --laser-cyan: #00f0ff;
   --crimson-hazard: #ff2a55;
   --phosphor-green: #00ff9d;
   --topaz-caution: #ff9100;
   --muted-silver: #8a99ad;
+}
+
+html[data-theme="light"],
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --panel: #ffffff;
+  --panel-border: #e2e8f0;
+  --panel-active-border: #0284c7;
+  --well: #f1f5f9;
+
+  /* High-Lux Mission Chromas (NASA Cleanroom White Theme) */
+  --solar-gold: #d97706;
+  --laser-cyan: #0284c7;
+  --crimson-hazard: #dc2626;
+  --phosphor-green: #059669;
+  --topaz-caution: #ea580c;
+  --muted-silver: #475569;
 }
 
 @theme inline {
@@ -36,13 +56,111 @@
 }
 
 body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+html[data-theme="dark"] body {
   background:
     radial-gradient(1400px 700px at 15% -15%, rgba(0, 240, 255, 0.04) 0%, transparent 60%),
     radial-gradient(1000px 600px at 85% 0%, rgba(255, 184, 0, 0.03) 0%, transparent 50%),
     #05070b;
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  letter-spacing: -0.01em;
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(1400px 700px at 15% -15%, rgba(2, 132, 199, 0.05) 0%, transparent 60%),
+    radial-gradient(1000px 600px at 85% 0%, rgba(217, 119, 6, 0.04) 0%, transparent 50%),
+    #f8fafc;
+}
+
+/* =========================================================================
+   SITE-WIDE NASA CLEANROOM WHITE THEME OVERRIDES
+   ========================================================================= */
+
+html[data-theme="light"] {
+  /* Panels & Cards */
+  .bg-\[\#0b0f19\],
+  .bg-\[\#070b14\],
+  .bg-\[\#10182c\],
+  .bg-\[\#0d1528\],
+  .bg-\[\#0d1528\]\/95,
+  .bg-\[\#121a2e\],
+  .bg-\[\#121a2e\]\/90,
+  .bg-\[\#0a1222\],
+  .bg-\[\#0a1324\],
+  .bg-\[\#0c1324\] {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  /* Recessed wells & deep bases */
+  .bg-\[\#05070b\],
+  .bg-\[\#04060a\],
+  .bg-\[\#020408\] {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Borders */
+  .border-\[\#1e2838\],
+  .border-\[\#2a6a78\]\/35,
+  .border-white\/8,
+  .border-white\/10,
+  .border-white\/12 {
+    border-color: #e2e8f0 !important;
+  }
+
+  /* High contrast text */
+  .text-white,
+  .text-slate-100,
+  .text-slate-50 {
+    color: #0f172a !important;
+  }
+
+  /* Technical secondary metadata text */
+  .text-slate-400,
+  .text-slate-300 {
+    color: #475569 !important;
+  }
+
+  .text-slate-500 {
+    color: #64748b !important;
+  }
+
+  /* Annunciator and alert backgrounds in light mode */
+  .bg-\[\#161206\] {
+    background-color: #fffbeb !important;
+    border-color: #fcd34d !important;
+  }
+
+  .bg-\[\#06141c\] {
+    background-color: #f0f9ff !important;
+    border-color: #bae6fd !important;
+  }
+
+  .bg-\[\#19080c\] {
+    background-color: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+  }
+
+  /* Hover states */
+  .hover\:bg-white\/10:hover {
+    background-color: #f1f5f9 !important;
+  }
+
+  .hover\:bg-white\/5:hover {
+    background-color: #f8fafc !important;
+  }
+
+  /* Calendar indicator */
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.2) sepia(1) saturate(5) hue-rotate(180deg) !important;
+  }
 }
 
 /* Tactical Tabular Figures for Jitter-Free Telemetry */
@@ -51,14 +169,12 @@ body {
   font-feature-settings: "tnum" 1, "zero" 1;
 }
 
-/* Monospaced Tactical Fonts */
 .font-telemetry {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
 
-/* Aerospace Tactical Heading */
 .font-hud {
   font-family: var(--font-sans);
   font-weight: 700;
@@ -69,8 +185,8 @@ body {
 /* Tactical Corner Brackets for Aerospace HUD Cards */
 .hud-card {
   position: relative;
-  background: #0b0f19;
-  border: 1px solid #1e2838;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
 }
 
 .hud-card::before,
@@ -150,10 +266,6 @@ body {
 .animate-radar-sweep {
   animation: radar-sweep 4s linear infinite;
   transform-origin: center center;
-}
-
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(160deg);
 }
 
 a, button {
