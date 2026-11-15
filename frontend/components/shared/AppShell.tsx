@@ -4,7 +4,6 @@ import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { HealthBadge } from "@/components/shared/HealthBadge";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { SidebarMeta } from "@/components/shared/SidebarMeta";
 import { SidebarNav } from "@/components/shared/SidebarNav";
 
@@ -59,10 +58,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <SidebarNav onNavigate={() => setOpen(false)} />
-          <div className="mt-4 pt-3 border-t border-white/8">
-            <p className="font-hud text-[10px] tracking-wider text-slate-400 mb-2">THEME PREFERENCE</p>
-            <ThemeToggle className="w-full justify-center" />
-          </div>
           <SidebarMeta />
         </aside>
 
@@ -99,7 +94,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="hidden rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 font-telemetry text-[11px] font-semibold text-[#ff9100] sm:inline">
                 SCIENTIFIC HONESTY: N/A ≠ 0
               </span>
-              <ThemeToggle />
               <OnboardingTour />
               <HealthBadge />
             </div>
